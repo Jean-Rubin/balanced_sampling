@@ -1,0 +1,18 @@
+Package: balanced.sampling
+Title: With-replacement balanced sampling bootstrap estimation
+Version: 0.0.0.9000
+Authors@R: 
+    person("Jean", "Rubin", , "jean.rubin@insee.fr", role = c("aut", "cre"))
+Description: This package is an experimental setup for testing potential
+    with-replacement balanced sampling designs.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Imports: 
+    dplyr,
+    purrr,
+    qs,
+    sampling,
+    tibble,
+    tidyr
