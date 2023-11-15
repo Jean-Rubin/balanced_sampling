@@ -81,119 +81,25 @@ sampler_gen_fuzzy_wr <- function(x_names, ...) {
 }
 
 reduc <- function(X, eps = 1e-11) {
-  N <- dim(X)[1]
   s <- svd(X)
 
   s$u[, s$d > eps, drop = FALSE]
 }
 
-
-sample_cube <- function(X, pik, eps = 1e-11) {
-  algofastflightcube <- function(X, pik) {
-    jump <- function(X, pik) {
-      N = length(pik)
-      p = round(length(X) / length(pik))
-      # X <- array(X, c(N, p))
-      X1 = cbind(X, rep(0, times = N))
-      kern <- svd(X1)$u[, p + 1]
-      listek = abs(kern) > eps
-      buff1 <- (1 - pik[listek]) / kern[listek]
-      buff2 <- -pik[listek] / kern[listek]
-      la1 <- min(c(buff1[(buff1 > 0)] , buff2[(buff2 > 0)]))
-      pik1 <- pik + la1 * kern
-      buff1 <- -(1 - pik[listek]) / kern[listek]
-      buff2 <- pik[listek] / kern[listek]
-      la2 <- min(c(buff1[(buff1 > 0)] , buff2[(buff2 > 0)]))
-      pik2 <- pik - la2 * kern
-      q <- la2 / (la1 + la2)
-      if (runif(1) < q)
-        pikn <- pik1
-      else
-        pikn <- pik2
-      pikn
-    }
-
-    N = length(pik)
-    p = round(length(X) / length(pik))
-    # X <- array(X, c(N, p))
-    A <- X / pik
-    B <- A[1:(p + 1), ]
-    psik <- pik[1:(p + 1)]
-    ind <- seq(1, p + 1, 1)
-    pp = p + 2
-    B <- array(B, c(p + 1, p))
-    while (pp <= N) {
-      psik <- jump(B, psik)
-      liste <- (psik > (1 - eps) | psik < eps)
-      i <- 0
-      while (i <= (p) && pp <= N) {
-        i = i + 1
-        if (liste[i]) {
-          pik[ind[i]] = psik[i]
-          psik[i] = pik[pp]
-          B[i, ] = A[pp, ]
-          B = array(B, c(p + 1, p))
-          ind[i] = pp
-          pp = pp + 1
-        }
-      }
-    }
-    if (length(pik[(pik > eps & pik < (1 - eps))]) == (p + 1))
-      psik <- jump(B, psik)
-    pik[ind] = psik
-    pik
-  }
-  reduc <- function(X) {
-    eps = 1e-11
-    N = dim(X)[1]
-    Re = svd(X)
-    array(Re$u[, (Re$d > eps)] , c(N, sum(as.integer(Re$d > eps))))
-  }
-
-  N = length(pik)
-
-  p = round(length(X) / length(pik))
-  # X <- array(X, c(N, p))
-  o <- sample.int(N, N)
-  liste <- o[(pik[o] > eps & pik[o] < (1 - eps))]
-
-  pikbon <- pik[liste]
-
-  Nbon = length(pikbon)
-
-  Xbon <- array(X[liste, ] , c(Nbon, p))
-  pikstar <- pik
-  if (Nbon > p) {
-    pikstarbon <- algofastflightcube(Xbon, pikbon)
-    pikstar[liste] = pikstarbon
-  }
-  # liste <- o[(pikstar[o] > eps & pikstar[o] < (1 - eps))]
-  # pikbon <- pikstar[liste]
-  # Nbon = length(pikbon)
-  # Xbon <- array(X[liste, ] , c(Nbon, p))
-  # pbon = dim(Xbon)[2]
-  # if (Nbon > 0) {
-  #   Xbon = reduc(Xbon)
-  #   pbon = dim(Xbon)[2]
-  # }
-
-  pbon = dim(Xbon)[2]
-  while (Nbon > pbon && Nbon > 0) {
-    pikstarbon <- algofastflightcube(Xbon / pik[liste] * pikbon, pikbon)
-    pikstar[liste] = pikstarbon
-    liste <- o[(pikstar[o] > eps & pikstar[o] < (1 - eps))]
-    pikbon <- pikstar[liste]
-    Nbon = length(pikbon)
-    Xbon <- array(X[liste, ] , c(Nbon, p))
-    if (Nbon > 0) {
-      Xbon = reduc(Xbon)
-      pbon = dim(Xbon)[2]
-    }
-  }
-
-  pikstar
-}
-
+#' Jump step in the with-replacement cube method
+#'
+#' Will select a random direction in the kernel of the balancing matrix and move
+#' the current sampling/inclusion probability vector to a new state. Given a
+#' direction, two candidate states are selected, corresponding to the moment
+#' where a unit is unselected.
+#'
+#' @param X The balancing matrix.
+#' @param pik The sampling/inclusion probability vector before jumping.
+#' @param eps A threshold for determining if a value is null.
+#'
+#' @return The sampling vector after the jump.
+#'
+#' @examples
 jump_wr <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
@@ -208,6 +114,16 @@ jump_wr <- function(X, pik, eps = 1e-11) {
   pik + (la1 - (la1 + la2) * rbinom(1, 1, q)) * kern
 }
 
+#' Flight phase of the with-replacement cube method
+#'
+#' @param X The balancing matrix.
+#' @param pik The inclusion probability vector.
+#' @param eps A threshold for determining if a value is null.
+#'
+#' @return A sampling vector of multiplicities
+#' @export
+#'
+#' @examples
 flight_wr <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
@@ -234,8 +150,6 @@ flight_wr <- function(X, pik, eps = 1e-11) {
     idx_next <- pp + seq_along(idx_rej)
     pp <- pp + length(idx_rej)
   }
-  if (length(pik[abs(pik - round(pik)) > eps]) == (p + 1))
-    psik <- jump_wr(B, psik, eps)
 
   # We regroup selected units and their probabilistic part
   n_select[ind] <- n_select[ind] + psik
@@ -255,13 +169,13 @@ sample_cube_wr <- function(X, pik, eps = 1e-11) {
   Xbon <- X[liste, ]
   pikstar <- pik
   if (Nbon > p) {
-    pikstarbon <- algofastflightcube(Xbon, pikbon)
+    pikstarbon <- flight_wr(Xbon, pikbon, eps)
     pikstar[liste] <- pikstarbon
   }
 
   pbon <- dim(Xbon)[2]
   while (Nbon > pbon && Nbon > 0) {
-    pikstarbon <- algofastflightcube(Xbon / pik[liste] * pikbon, pikbon)
+    pikstarbon <- flight_wr(Xbon / pik[liste] * pikbon, pikbon, eps)
     pikstar[liste] <- pikstarbon
     liste <- o[abs(pikstar[o] - round(pikstar[o])) > eps]
     pikbon <- pikstar[liste]
