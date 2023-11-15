@@ -22,8 +22,8 @@ pseudo_inv <- function(x, tol = 1e-6) {
 #' @export
 compute_total <- function(population) {
   population |>
-    summarize(y_true = sum(y)) |>
-    pull(y_true)
+    dplyr::summarize(y_true = sum(y)) |>
+    dplyr::pull(y_true)
 }
 
 #' Calcul de la matrice de variance-covariance de deux totaux de variables
