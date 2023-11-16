@@ -70,6 +70,13 @@ sampler_gen_fuzzy_custom <- function(x_names,  ...) {
   }
 }
 
+#' With-replacement cube method fuzzy sampling (flight phase)
+#'
+#' @param population
+#'
+#' @return A sample with the same columns as the population, but with an
+#'   indicator of selection `s_i` that can be between 0 and 1.
+#' @export
 sampler_gen_fuzzy_wr <- function(x_names, ...) {
   function(population) {
     x <- as.matrix(population[x_names])
@@ -107,9 +114,9 @@ jump_wr <- function(X, pik, eps = 1e-11) {
   kern <- svd(X1)$u[, p + 1]
   idx_kern <- abs(kern) > eps
   buff <- -pik[idx_kern] / kern[idx_kern]
-  la1 <- min(buff[buff > 0])
-  la2 <- min(-buff[buff < 0])
-  q <- la1 / (la1 + la2)
+  la1 <- min(buff[buff >= 0])
+  la2 <- min(-buff[buff <= 0])
+  q <- la1 / (la1 + la2 + eps)
 
   pik + (la1 - (la1 + la2) * rbinom(1, 1, q)) * kern
 }
@@ -134,8 +141,10 @@ flight_wr <- function(X, pik, eps = 1e-11) {
   ind <- 1:(p + 1)
   idx_rej <- 1:(p + 1)
   idx_next <- 1:(p + 1)
-  pp <- p + 1 # last p
-  while (pp <= N) {
+  while (length(idx_next) > 0 && idx_next[1] <= N) {
+    nb_valid_ind <- sum(idx_next <= N)
+    idx_next <- idx_next[seq_len(nb_valid_ind)]
+    idx_rej <- idx_rej[seq_len(nb_valid_ind)]
     psik[idx_rej] <- pik[idx_next]
     B[idx_rej, ] <- A[idx_next, ]
     ind[idx_rej] <- idx_next
@@ -144,11 +153,10 @@ flight_wr <- function(X, pik, eps = 1e-11) {
     # This matter when calling the floor function
     psik <- abs(jump_wr(B, psik, eps))
 
-    n_select[ind] <- n_select[ind] + floor(psik)
-    psik <- psik - floor(psik)
+    n_select[ind] <- n_select[ind] + floor(psik + eps)
+    psik <- psik - floor(psik + eps)
     idx_rej <- which(psik < eps)
-    idx_next <- pp + seq_along(idx_rej)
-    pp <- pp + length(idx_rej)
+    idx_next <- idx_next[length(idx_next)] + seq_along(idx_rej)
   }
 
   # We regroup selected units and their probabilistic part
@@ -161,31 +169,14 @@ sample_cube_wr <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
   o <- sample.int(N, N)
-  liste <- o[abs(pik[o] - round(pik[o])) > eps]
 
-  pikbon <- pik[liste]
-
-  Nbon <- length(pikbon)
-  Xbon <- X[liste, ]
-  pikstar <- pik
-  if (Nbon > p) {
-    pikstarbon <- flight_wr(Xbon, pikbon, eps)
-    pikstar[liste] <- pikstarbon
+  ind_remain <- o[abs(pik[o] - round(pik[o])) > eps]
+  X_remain <- X[ind_remain, , drop = FALSE]
+  while (length(ind_remain) > dim(X_remain)[2]) {
+    pik[ind_remain] <- flight_wr(X_remain, pik[ind_remain], eps)
+    ind_remain <- o[abs(pik[o] - round(pik[o])) > eps]
+    X_remain <- reduc(X[ind_remain, , drop = FALSE])
   }
 
-  pbon <- dim(Xbon)[2]
-  while (Nbon > pbon && Nbon > 0) {
-    pikstarbon <- flight_wr(Xbon / pik[liste] * pikbon, pikbon, eps)
-    pikstar[liste] <- pikstarbon
-    liste <- o[abs(pikstar[o] - round(pikstar[o])) > eps]
-    pikbon <- pikstar[liste]
-    Nbon = length(pikbon)
-    Xbon <- array(X[liste, ] , c(Nbon, p))
-    if (Nbon > 0) {
-      Xbon = reduc(Xbon)
-      pbon = dim(Xbon)[2]
-    }
-  }
-
-  pikstar
+  pik
 }
