@@ -30,14 +30,14 @@ n_multi <- 100L
 multi_step <- tar_map(
   unlist = FALSE,
   values = list(iter = seq_len(n_multi)),
-  tar_target(sample,
+  tar_target(sample_base,
     sampler_gen(x_names)(population)
   ),
-  tar_target(sample_copy,
-    sampler_gen_wr_copy(x_names)(population)
+  tar_target(sample_wr,
+    sampler_gen_fuzzy_wr(x_names)(population)
   ),
   tar_target(pseudo_population,
-    create_pseudo_population(sample)
+    create_pseudo_population(sample_base, x_names)
   ),
   tar_target(y_boots,
     mcmc_population(pseudo_population, sampler_gen(x_names), n_iter_boot)
@@ -63,9 +63,9 @@ list(
   ## Parameters ----------------------------------------------------------------
   tar_target(n_tot, 1000L),
   tar_target(n_sample, 100L),
-  tar_target(n_iter_true, 50L),
-  tar_target(n_iter_boot, 10L),
-  tar_target(x_names, c("x", "pi_i_aux")),
+  tar_target(n_iter_true, 500L),
+  tar_target(n_iter_boot, 100L),
+  tar_target(x_names, c("x1", "pi_i_aux")),
   ## Main baseline -------------------------------------------------------------
   tar_target(population,
     create_population(n_tot) |>
@@ -80,14 +80,14 @@ list(
   tar_target(v_true,
     var(y_hats)
   ),
-  tar_target(y_hats_wr_copy,
-    mcmc_population(population, sampler_gen_wr_copy(x_names), n_iter_true)
+  tar_target(y_hats_wr,
+    mcmc_population(population, sampler_gen_fuzzy_wr(x_names), n_iter_true)
   ),
-  tar_target(v_true_wr_copy,
-    var(y_hats_wr_copy)
+  tar_target(v_true_wr,
+    var(y_hats_wr)
   ),
   tar_target(v_approx_multinomial,
-    compute_v_approx_multinomial(population, c("x", "pi_i_aux"))
+    compute_v_approx_multinomial(population, x_names)
   ),
   ## Single step ---------------------------------------------------------------
   tar_target(sample_step,
@@ -96,11 +96,11 @@ list(
   tar_target(sample_step_srswor,
     sampler_gen_srswor()(population)
   ),
-  tar_target(sample_step_wr_copy,
-    sampler_gen_wr_copy(x_names)(population)
+  tar_target(sample_step_wr,
+    sampler_gen_fuzzy_wr(x_names)(population)
   ),
   tar_target(pseudo_population_step,
-    create_pseudo_population(sample_step)
+    create_pseudo_population(sample_step, x_names)
   ),
   tar_target(y_boots_step,
     mcmc_population(pseudo_population_step, sampler_gen(x_names), n_iter_boot)

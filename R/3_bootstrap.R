@@ -1,13 +1,13 @@
-create_pseudo_population <- function(sample) {
+create_pseudo_population <- function(sample, x_names) {
   n_sample <- nrow(sample)
   bind_rows(map(
     seq_len(n_sample),
     \(x) sample
   )) |>
     mutate(
-      x = x / pi_i,
-      y = y / (n_sample * pi_i),
-      pi_i = 1 / n_sample
+      across(all_of(x_names), \(x) x / pi_i),
+      y = y / (.env$n_sample * pi_i),
+      pi_i = 1 / .env$n_sample
     )
 }
 

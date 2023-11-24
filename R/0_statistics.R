@@ -9,7 +9,7 @@
 #' @examples pseudo_inv(diag(c(1,2,3,0)), tol = 1e-3)
 pseudo_inv <- function(x, tol = 1e-6) {
   svd_x <- svd(x)
-  d <- diag(ifelse(svd_x$d < tol, 0, 1 / svd_x$d))
+  d <- diag(ifelse(svd_x$d < tol, 0, 1 / svd_x$d), nrow = length(svd_x$d))
 
   svd_x$v %*% d %*% t(svd_x$u)
 }
