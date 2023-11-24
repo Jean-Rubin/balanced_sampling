@@ -1,7 +1,10 @@
 create_population <- function(n_tot, noise = 1) {
   tibble(
-    x = rnorm(n_tot, mean = 5, sd = 2),
-    y = 2 * x + rnorm(n_tot, mean = 0, sd = noise)
+    const = 1,
+    x1 = rnorm(n_tot, mean = 5, sd = 2),
+    x2 = rnorm(n_tot, mean = -1, sd = 3),
+    x3 = rnorm(n_tot, mean = 8, sd = 1),
+    y = 2 * x1 + x2 - x3 + rnorm(n_tot, mean = 0, sd = noise)
   )
 }
 
