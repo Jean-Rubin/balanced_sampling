@@ -88,7 +88,7 @@ compute_v_approx_deville_tille <- function(population, x_names, tol = 1e-6) {
   n <- nrow(population)
   p <- length(x_names)
 
-  x_diag_p <- t(x) %*% diag((1 - pi_i) / pi_i)
+  x_diag_p <- t(x) %*% diag((1 - pi_i) / pi_i, ncol = length(pi_i))
   beta <- pseudo_inv(x_diag_p %*% x, tol) %*% x_diag_p %*% y
   e <- y - x %*% beta
   delta <- diag(pi_i * (1 - pi_i))
