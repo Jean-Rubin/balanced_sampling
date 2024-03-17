@@ -25,7 +25,7 @@ options(clustermq.scheduler = "multicore")
 
 tar_source()
 
-n_multi <- 100L
+n_multi <- 10L
 
 multi_step <- tar_map(
   unlist = FALSE,
@@ -47,14 +47,14 @@ multi_step <- tar_map(
   )
 )
 
-y_boots_m <- tar_combine(
+multi_step_y_boots <- tar_combine(
   y_bootss,
   multi_step[["y_boots"]],
   command = bind_cols(!!!.x) |>
     pivot_longer(everything(), names_to = "id", values_to = "y_boots")
 )
 
-v_hat_m <- tar_combine(
+multi_step_v_hat <- tar_combine(
   v_hats,
   multi_step[["v_hat"]]
 )
@@ -90,26 +90,26 @@ list(
     compute_v_approx_multinomial(population, x_names)
   ),
   ## Single step ---------------------------------------------------------------
-  tar_target(sample_step,
+  tar_target(step_sample,
     sampler_gen(x_names)(population)
   ),
-  tar_target(sample_step_srswor,
+  tar_target(step_sample_srswor,
     sampler_gen_srswor()(population)
   ),
-  tar_target(sample_step_wr,
+  tar_target(step_sample_wr,
     sampler_gen_fuzzy_wr(x_names)(population)
   ),
-  tar_target(pseudo_population_step,
-    create_pseudo_population(sample_step, x_names)
+  tar_target(step_pseudo_population,
+    create_pseudo_population(step_sample, x_names)
   ),
-  tar_target(y_boots_step,
-    mcmc_population(pseudo_population_step, sampler_gen(x_names), n_iter_boot)
+  tar_target(step_y_boots,
+    mcmc_population(step_pseudo_population, sampler_gen(x_names), n_iter_boot)
   ),
-  tar_target(v_hat_step,
-    var(y_boots_step)
+  tar_target(step_v_hat,
+    var(step_y_boots)
   ),
   ## Multi step ----------------------------------------------------------------
   multi_step,
-  y_boots_m,
-  v_hat_m
+  multi_step_y_boots,
+  multi_step_v_hat
 )
