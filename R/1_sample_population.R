@@ -41,12 +41,14 @@ sampler_gen <- function(x_names, ...) {
 #' @export
 sampler_gen_wr_copy <- function(x_names, ...) {
   function(population) {
-    n_copy <- sum(population[["pi_i"]])
+    # Random rounding if non-integer sum
+    n_copy <- floor(runif(1) + sum(population[["pi_i"]]))
     wr_population <- population |>
       tidyr::uncount(.env$n_copy) |>
       mutate(
-        pi_i = pi_i / .env$n_copy,
-        y = y / .env$n_copy
+        across(all_of(x_names), \(x) x / pi_i),
+        y = y / (.env$n_copy * pi_i),
+        pi_i = 1 / .env$n_copy
       )
 
     sampler_gen(x_names)(wr_population)
@@ -65,7 +67,7 @@ sampler_gen_fuzzy_custom <- function(x_names,  ...) {
     x <- as.matrix(population[x_names])
     population |>
       mutate(
-        s_i = sample_cube(.env$x, pi_i)
+        s_i = sampling::fastflightcube(.env$x, pi_i, comment = FALSE)
       )
   }
 }
@@ -86,6 +88,24 @@ sampler_gen_fuzzy_wr <- function(x_names, ...) {
       )
   }
 }
+
+#' With-replacement stepwise max-entropy cube method fuzzy sampling (flight phase)
+#'
+#' @param x_names
+#' @param ...
+#'
+#' @return
+#' @export
+sampler_gen_fuzzy_wr_ent <- function(x_names, ...) {
+  function(population) {
+    x <- as.matrix(population[x_names])
+    population |>
+      mutate(
+        s_i = flight_phase_wr_ent(.env$x, pi_i)
+      )
+  }
+}
+
 
 reduc <- function(X, eps = 1e-11) {
   s <- svd(X)
@@ -179,4 +199,71 @@ sample_cube_wr <- function(X, pik, eps = 1e-11) {
   }
 
   pik
+}
+
+
+## With replacement cube with max-entropy jump
+
+jump_wr_ent <- function(X, pik, eps = 1e-11) {
+  N <- dim(X)[1]
+  p <- dim(X)[2]
+  X1 <- cbind(X, rep(0, times = N))
+  u_kern <- svd(X1)$u[, p + 1]
+
+  # find jump candidates
+  # Some values are eventually infinite here
+  lambdak_0 <- -pik / u_kern
+  lambda_min <- max(lambdak_0[u_kern > eps]) - eps
+  lambda_max <- min(lambdak_0[u_kern < -eps]) + eps
+
+  lambda_low <- (lambda_max + (u_kern > 0) * (lambda_min - lambda_max))
+  mk_min <- ceiling(pik + u_kern * lambda_low)
+  mk_max <- floor(pik + u_kern * (lambda_min + lambda_max - lambda_low))
+  mk <- purrr::map2(mk_min, mk_max, \(x, y) if (x > y) NULL else seq(x, y))
+
+  # Compute the associated lambda and pick one
+  lambdak <- purrr::pmap(
+    list(mk, pik, u_kern),
+    \(m, p, u) (m - p) / u
+  ) |>  purrr::list_c()
+  k_selects <- rep(seq_along(mk), purrr::map_dbl(mk, length))
+  lambdak
+
+  idx_select <- sample_max_entropy(lambdak)
+  k_select <- k_selects[idx_select]
+  lambda_select <- lambdak[idx_select]
+
+  list(
+    k_select = k_select,
+    pi_jump = pik + lambda_select * u_kern
+  )
+}
+
+flight_phase_wr_ent <- function(X, pik, eps = 1e-11) {
+  N <- dim(X)[1]
+  p <- dim(X)[2]
+  A <- X / pik
+
+  # Final pi after flight phase
+  #   will store number of times we select a unit
+  n_select <- numeric(N)
+  # Jumping pi, its length decreases as we select units
+  pik_jump <- pik
+  # Indices of units that are not selected yet
+  idx_remain <- seq_len(N)
+  while (length(idx_remain) > p) {
+    B <- A[idx_remain, ]
+    jump_result <- jump_wr_ent(B, pik_jump, eps)
+    pik_jump <- jump_result$pi_jump
+    k_select <- jump_result$k_select
+
+    n_select[idx_remain][k_select] <- pik_jump[k_select]
+    idx_remain <- idx_remain[-k_select]
+    pik_jump <- pik_jump[-k_select]
+  }
+
+  # We regroup selected units and their probabilistic part
+  n_select[idx_remain] <- n_select[idx_remain] + pik_jump
+
+  n_select
 }
