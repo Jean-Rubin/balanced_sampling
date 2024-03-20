@@ -6,6 +6,28 @@ lambdas <- list(
   c(0, -1, 0)
 )
 
+describe("init_p()", {
+  eps <- 1e-11
+  for (lambda in lambdas) {
+    p <- init_p(lambda, eps)
+
+    it("gives a vector of the same size as lambda", {
+      expect_equal(length(p), length(lambda))
+    })
+    it("gives a probability vector", {
+      expect_equal(sum(p), 1)
+      expect_true(all(p >= -eps))
+    })
+    it(add_context("is orthogonal to lambda", lambda), {
+      expect_equal(sum(p * lambda), 0)
+    })
+    it("gives an interior solution, with strictly positive values" |>
+      add_context(lambda),
+      expect_true(all(p > 0) | all(lambda >= -eps) | all(lambda <= eps))
+    )
+  }
+})
+
 test_that("init_p() gives an interior solution", {
   eps <- 1e-11
   for (lambda in lambdas) {
