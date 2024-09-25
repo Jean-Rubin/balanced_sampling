@@ -19,9 +19,9 @@ compute_total <- function(population) {
 #' @param y A Matrix (n x q) representing a vector valued interest variable,
 #'   where lines correspond to individual.
 #' @param pi_i A vector (n) of inclusion probabilities of each individual.
-#' 
+#'
 #' @return The associated covariance matrix (p x q).
-#' 
+#'
 #' @examples
 #' x <- matrix(c(1, 2, 1, 2), nrow = 2)
 #' y <- matrix(c(1, 3, 4, 5, 6, 7), nrow = 2)
@@ -45,7 +45,7 @@ compute_covariance_multinomial <- function(x, y, pi_i) {
 #'   - `pi_i`: the inclusion probability of the individual.
 #' @param x_names A vector of the names of the auxiliary variables used to
 #'   balance the sample.
-#' 
+#'
 #' @inheritParams pseudo_inv
 #'
 #' @return A variance approximation of the total estimator of `y`.
@@ -73,7 +73,7 @@ compute_v_approx_multinomial <- function(population, x_names, tol = 1e-6) {
 #'   - `pi_i`: the inclusion probability of the individual.
 #' @param x_names  A vector of the names of the auxiliary variables used to
 #'   balance the sample.
-#' 
+#'
 #' @inheritParams pseudo_inv
 #'
 #' @return A variance approximation of the total estimator of `y`.

@@ -1,3 +1,5 @@
+# Sampling strategies ---------------------------------------------------------
+
 #' Standard without-replacement sampling
 #'
 #' @param population
