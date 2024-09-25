@@ -14,8 +14,11 @@ Imports:
     purrr,
     qs,
     sampling,
+    tarchetypes,
+    targets,
     tibble,
-    tidyr
+    tidyr,
+    visNetwork
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
