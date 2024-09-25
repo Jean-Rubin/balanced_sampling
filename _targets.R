@@ -25,28 +25,36 @@ options(clustermq.scheduler = "multicore")
 
 tar_source()
 
-n_multi <- 10L
-
+# Repeat construction of targets
+n_multi <- 10L # Number of repetitions
 multi_step <- tar_map(
   unlist = FALSE,
   values = list(iter = seq_len(n_multi)),
+  # Samples from cube method
   tar_target(sample_base,
     sampler_gen(x_names)(population)
   ),
+  # Samples from with-replacement exhaustion
   tar_target(sample_wr,
     sampler_gen_fuzzy_wr(x_names)(population)
   ),
+  # Pseudo population from basic cube sample
   tar_target(pseudo_population,
     create_pseudo_population(sample_base, x_names)
   ),
+  # Bootstrap estimations from pseudo population
   tar_target(y_boots,
-    mcmc_population(pseudo_population, sampler_gen(x_names), n_iter_boot)
+    mc_estimate_total(pseudo_population, sampler_gen(x_names), n_iter_boot)
   ),
+  # Estimated variance from pseudo population bootstrap
   tar_target(v_hat,
     var(y_boots)
   )
 )
 
+# Table of bootstrap estimators of total:
+# `id`: (non-unique) name of the form `y_boots_{i}`.
+# `y_boots`: value of the bootstrap estimator.
 multi_step_y_boots <- tar_combine(
   y_bootss,
   multi_step[["y_boots"]],
@@ -54,6 +62,7 @@ multi_step_y_boots <- tar_combine(
     pivot_longer(everything(), names_to = "id", values_to = "y_boots")
 )
 
+# Named vector of bootstrap variance estimators.
 multi_step_v_hat <- tar_combine(
   v_hats,
   multi_step[["v_hat"]]
@@ -61,50 +70,55 @@ multi_step_v_hat <- tar_combine(
 
 list(
   ## Parameters ----------------------------------------------------------------
-  tar_target(n_tot, 1000L),
-  tar_target(n_sample, 100L),
-  tar_target(n_iter_true, 500L),
-  tar_target(n_iter_boot, 100L),
-  tar_target(x_names, c("x1", "pi_i_aux")),
+  tar_target(n_tot, 1000L), # Population size
+  tar_target(n_sample, 100L), # Sample size
+  tar_target(n_iter_true, 500L), # Number of iteration to compute true variance
+  tar_target(n_iter_boot, 100L), # Number of bootstrap iteration
+  tar_target(x_names, c("x1", "pi_i_aux")), # Names of auxiliary variables
   ## Main baseline -------------------------------------------------------------
-  tar_target(population,
+  tar_target(population, # Population
     create_population(n_tot) |>
       set_inclusion_proba(pi_gen_unif(n_sample = n_sample))
   ),
-  tar_target(y_true,
+  tar_target(y_true, # Total of `y` on the population
     compute_total(population)
   ),
-  tar_target(y_hats,
-    mcmc_population(population, sampler_gen(x_names), n_iter_true)
+  tar_target(y_hats, # Estimators of total
+    mc_estimate_total(population, sampler_gen(x_names), n_iter_true)
   ),
-  tar_target(v_true,
+  tar_target(v_true, # True variance of the estimator of total
     var(y_hats)
   ),
-  tar_target(y_hats_wr,
-    mcmc_population(population, sampler_gen_fuzzy_wr(x_names), n_iter_true)
+  tar_target(y_hats_wr, # Estimators of total from with-replacement exhaustion
+    mc_estimate_total(population, sampler_gen_fuzzy_wr(x_names), n_iter_true)
   ),
-  tar_target(v_true_wr,
+  tar_target(v_true_wr, # Variance associated to with-replacement exhaustion
     var(y_hats_wr)
   ),
-  tar_target(v_approx_multinomial,
+  tar_target(v_approx_multinomial, # Multinomial approximation of variance
     compute_v_approx_multinomial(population, x_names)
   ),
   ## Single step ---------------------------------------------------------------
-  tar_target(step_sample,
+  tar_target(step_sample, # Basic cube sample
     sampler_gen(x_names)(population)
   ),
+  # Basic SRSWOR sample (has an indicator of selection)
   tar_target(step_sample_srswor,
     sampler_gen_srswor()(population)
   ),
+  # With-replacement exhaustion sample
   tar_target(step_sample_wr,
     sampler_gen_fuzzy_wr(x_names)(population)
   ),
+  # Pseudo-population generated from basic cube sample
   tar_target(step_pseudo_population,
     create_pseudo_population(step_sample, x_names)
   ),
+  # Vector of bootstrap estimators of total generated from pseudo-population
   tar_target(step_y_boots,
-    mcmc_population(step_pseudo_population, sampler_gen(x_names), n_iter_boot)
+    mc_estimate_total(step_pseudo_population, sampler_gen(x_names), n_iter_boot)
   ),
+  # Pseudo-population bootstrap variance estimator
   tar_target(step_v_hat,
     var(step_y_boots)
   ),
