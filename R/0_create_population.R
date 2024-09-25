@@ -1,3 +1,14 @@
+# Population creation ---------------------------------------------------------
+
+#' Create a population
+#'
+#' @param n_tot Total number of individual.
+#' @param noise Noise parameter in the generation of the variable of interest.
+#'
+#' @return A `tibble` data frame.
+#' @export
+#' @examples
+#' create_population(10, noise = 1)
 create_population <- function(n_tot, noise = 1) {
   tibble(
     const = 1,
@@ -9,6 +20,20 @@ create_population <- function(n_tot, noise = 1) {
   )
 }
 
+## Generator helper -----------------------------------------------------------
+
+#' Set the inclusion probabilities of the population
+#'
+#' Description
+#'
+#' @param population A data frame corresponding to the population.
+#' @param pi_gen A probability generator. This generator must take
+#'   the number of individual as a parameter.
+#'
+#' @return The same data frame with two additionnal columns:
+#'   `pi_i` and `pi_i_aux`.
+#' @examples
+#' create_population(10) |> set_inclusion_proba(pi_gen_unif)
 set_inclusion_proba <- function(population, pi_gen) {
   population |>
     mutate(
@@ -17,17 +42,47 @@ set_inclusion_proba <- function(population, pi_gen) {
     )
 }
 
+### Inclusion probability generator -------------------------------------------
+
+#' Beta distribution probability generator
+#'
+#' @param a Parameter of the beta distribution.
+#' @param b Parameter of the beta distribution.
+#'
+#' @return A probability generator.
+#' @export
+#' @examples
+#' pi_gen_beta(1, 5)
 pi_gen_beta <- function(a = 1, b = 5) {
   \(n) rbeta(n, a, b)
 }
 
+#' Uniform distribution probability generator
+#'
+#' @param n_sample Number of element in the sample.
+#'
+#' @return A probability generator.
+#' @export
+#' @examples
+#' pi_gen_unif(10)
 pi_gen_unif <- function(n_sample) {
   \(n) rep(n_sample / n, n)
 }
 
-# Note: this does not depend on n, it ideally should depend on population
-# Now we will assume that the population is not dynamically changing, so it is
-# possible to precompute the sizes.
+#' Proportional to variable - probability generator
+#'
+#' Note: this does not depend on n, it ideally should depend on population
+#' Now we will assume that the population is not dynamically changing, so it is
+#' possible to precompute the auxiliary variables.
+#'
+#' @param n_sample Number of element in the sample.
+#' @param x Auxiliary variable to which the probabilities should be proportional.
+#'
+#' @return A probability generator.
+#' @export
+#' @examples
+#' # This generator assumes that the population is of size 7
+#' pi_gen_prop_size(2, c(1,2,3,5,2,1,1))
 pi_gen_prop_size <- function(n_sample, x) {
   \(n) sampling::inclusionprobabilities(x, n_sample)
 }
