@@ -12,11 +12,11 @@
 create_population <- function(n_tot, noise = 1) {
   tibble(
     const = 1,
-    x1 = rnorm(n_tot, mean = 5, sd = 2),
+    x1 = rnorm(n_tot, mean = 10, sd = 2),
     x2 = rnorm(n_tot, mean = -1, sd = 3),
     x3 = rnorm(n_tot, mean = 8, sd = 1),
     x4 = rnorm(n_tot, mean = 0, sd = noise),
-    y = 2 * x1 + x2 - x3 + x4
+    y = 2 * x1 + x4
   )
 }
 
@@ -76,7 +76,8 @@ pi_gen_unif <- function(n_sample) {
 #' possible to precompute the auxiliary variables.
 #'
 #' @param n_sample Number of element in the sample.
-#' @param x Auxiliary variable to which the probabilities should be proportional.
+#' @param x Auxiliary variable to which the probabilities should be
+#'   proportional to.
 #'
 #' @return A probability generator.
 #' @export
