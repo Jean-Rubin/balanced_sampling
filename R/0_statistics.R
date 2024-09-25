@@ -1,19 +1,3 @@
-#' Calcul du pseudo-inverse d'une matrice
-#'
-#' @param x Matrice à pseudo-inverser.
-#' @param tol Seuil de tolérance pour déterminer les valeurs propres nulles.
-#'
-#' @return Une matrice.
-#' @export
-#'
-#' @examples pseudo_inv(diag(c(1,2,3,0)), tol = 1e-3)
-pseudo_inv <- function(x, tol = 1e-6) {
-  svd_x <- svd(x)
-  d <- diag(ifelse(svd_x$d < tol, 0, 1 / svd_x$d), nrow = length(svd_x$d))
-
-  svd_x$v %*% d %*% t(svd_x$u)
-}
-
 #' Calcul du total sur la variable `y` de la population
 #'
 #' @param population Population

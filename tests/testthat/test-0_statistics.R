@@ -11,12 +11,6 @@ describe("compute_total()", {
   })
 })
 
-describe("pseudo_inv()", {
-  it("returns a 1x1 matrix when we give a 1x1 matrix", {
-    expect_equal(pseudo_inv(matrix(2)), matrix(0.5))
-  })
-})
-
 describe("compute_covariance_multinomial()", {
   x <- as.matrix(population_test["x"])
   y <- as.matrix(population_test["y"])

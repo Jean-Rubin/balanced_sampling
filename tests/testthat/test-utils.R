@@ -1,3 +1,9 @@
+describe("pseudo_inv()", {
+  it("returns a 1x1 matrix when we give a 1x1 matrix", {
+    expect_equal(pseudo_inv(matrix(2)), matrix(0.5))
+  })
+})
+
 describe("clamp()", {
   it("leaves the value unchanged if it is between bound", {
     expect_equal(clamp(0.5, 0.1, 0.9), 0.5)
