@@ -1,6 +1,21 @@
+#' Estimate total from a sample
+#'
+#' The sample can have non-integer selection of units, for example as a result
+#' of the flight phase.
+#'
+#' @param sample A data frame corresponding to a sample of the population.
+#'   It contains:
+#'   - `y`: the variable of interest.
+#'   - `pi_i`: the inclusion probability.
+#'   - `s_i`: the (eventually non-integer) indicator of inclusion.
+#'
+#' @return A scalar corresponding to the estimator of the total.
+#' @examples
+#' samp <- data.frame(y = 1:5, pi_i = rep(0.5, 5), s_i = c(1, 0, 1, 0.5, 0, 0))
+#' estimate_total(samp)
 estimate_total <- function(sample) {
   sample |>
-    summarize(y_hat = sum(y / pi_i * s_i)) |>
+    summarize(y_hat = sum(s_i * y / pi_i)) |>
     pull(y_hat)
 }
 
@@ -14,9 +29,3 @@ estimate_variance_balanced <- function(sample_pop, x_names, tol = 1e-6) {
 
   t(e) %*% e
 }
-
-
-
-
-
-

@@ -13,7 +13,7 @@ compute_total <- function(population) {
 }
 
 #' Covariance matrix of totals from multinomial sampling
-#' 
+#'
 #' @param x A matrix (n x p) representing a vector valued interest variable,
 #'   where lines correspond to individual.
 #' @param y A Matrix (n x q) representing a vector valued interest variable,

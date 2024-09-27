@@ -2,6 +2,8 @@
 
 export(clamp)
 export(compute_noise_df)
+export(compute_relative_bias)
+export(compute_relative_stability)
 export(compute_total)
 export(compute_v_approx_deville_tille)
 export(compute_v_approx_multinomial)
