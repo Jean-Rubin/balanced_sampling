@@ -11,9 +11,11 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     dplyr,
+    kableExtra,
     languageserver,
     purrr,
     qs,
+    Rsolnp,
     sampling,
     tarchetypes,
     targets,

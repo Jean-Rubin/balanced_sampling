@@ -47,7 +47,9 @@ mc_estimate_total <- function(
 compute_v_trues <- function(population, sample_fn_list, n_iter_true) {
   y_hatss <- purrr::map(
     sample_fn_list,
-    \(sample_fn) mc_estimate_total(population, sample_fn, n_iter_true)
+    \(sample_fn) {
+      mc_estimate_total(population, sample_fn, n_iter_true, .progress = FALSE)
+    }
   )
   v_trues <- purrr::map_dbl(y_hatss, var)
 

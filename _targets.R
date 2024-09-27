@@ -125,5 +125,25 @@ list(
   ## Multi step ----------------------------------------------------------------
   multi_step,
   multi_step_y_boots,
-  multi_step_v_hat
+  multi_step_v_hat,
+  ## Analysis ------------------------------------------------------------------
+  tar_target(noise_df,
+    compute_noise_df(
+      population,
+      noises = c(0.1, 0.5, 1, 2, 5, 10),
+      x_names = c("const", "pi_i_aux", "x1", "x3"),
+      n_iter_true = 1000L,
+      sample_fn_list = get_sample_fn_list,
+      v_approx_fn_list = get_v_approx_fn_list()
+    )
+  ),
+  ### Output -------------------------------------------------------------------
+  tar_target(table_noise,
+    write_table_noise_tex(
+      noise_df,
+      get_sample_fn_list(c("const", "pi_i_aux", "x1", "x3")),
+      get_v_approx_fn_list()
+    ),
+    format = "file"
+  )
 )
