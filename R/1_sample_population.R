@@ -48,9 +48,8 @@ sampler_gen_wr_copy <- function(x_names, ...) {
     wr_population <- population |>
       tidyr::uncount(.env$n_copy) |>
       mutate(
-        across(all_of(x_names), \(x) x / pi_i),
-        y = y / (.env$n_copy * pi_i),
-        pi_i = 1 / .env$n_copy
+        y = y / .env$n_copy,
+        pi_i = pi_i / .env$n_copy
       )
 
     sampler_gen(x_names)(wr_population)
