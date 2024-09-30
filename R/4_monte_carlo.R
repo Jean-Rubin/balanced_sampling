@@ -11,7 +11,7 @@
 #' @export
 #' @examples
 #' population <- data.frame(y = 1:4, x1 = 5:8, pi_i = rep(0.2, 4))
-#' mc_estimate_total(population, sampler_gen("x1"), 20)
+#' mc_estimate_total(population, sampler_gen_base("x1"), 20)
 mc_estimate_total <- function(
   population,
   sample_fn,
@@ -43,7 +43,7 @@ mc_estimate_total <- function(
 #' @export
 #' @examples
 #' population <- data.frame(y = 1:4, x1 = 5:8, pi_i = rep(0.2, 4))
-#' compute_true(population, list(base = sampler_gen("x1")), 20)
+#' compute_true(population, list(base = sampler_gen_base("x1")), 20)
 compute_v_trues <- function(population, sample_fn_list, n_iter_true) {
   y_hatss <- purrr::map(
     sample_fn_list,

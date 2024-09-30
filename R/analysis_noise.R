@@ -19,11 +19,11 @@
 get_sample_fn_list <- function(x_names) {
   list(
     srswor = sampler_gen_srswor(),
-    base = sampler_gen(x_names),
-    base_flight = sampler_gen_fuzzy_custom(x_names),
-    wr_flight = sampler_gen_fuzzy_wr(x_names),
+    base = sampler_gen_base(x_names),
+    base_flight = sampler_gen_flight_base(x_names),
+    wr_flight_exh = sampler_gen_flight_wr_exh(x_names),
     wr_copy = sampler_gen_wr_copy(x_names),
-    wr_ent_flight = sampler_gen_fuzzy_wr_ent(x_names)
+    wr_ent_flight = sampler_gen_flight_wr_ent(x_names)
   )
 }
 

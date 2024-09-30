@@ -2,10 +2,11 @@
 
 #' Standard without-replacement sampling
 #'
-#' @param population
+#' @param ... Unused extra arguments.
 #'
-#' @return A sample with the same columns as the population, but with an
-#'   indicator of selection `s_i`.
+#' @return A sampling function, which given a population, returns a sample with
+#'   the same columns as the population, but with an indicator of selection
+#'   named `s_i`.
 sampler_gen_srswor <- function(...) {
   function(population) {
     n_sample <- round(sum(population[["pi_i"]]))
@@ -18,12 +19,15 @@ sampler_gen_srswor <- function(...) {
 
 #' Standard balanced sampling using the cube method
 #'
-#' @param population
+#' @param x_names A vector of the names of the auxiliary variables used to
+#'   balance the sample.
+#' @param ... Unused extra arguments.
 #'
-#' @return A sample with the same columns as the population, but with an
-#'   indicator of selection `s_i`.
+#' @return A sampling function, which given a population, returns a sample with
+#'   the same columns as the population, but with an indicator of selection
+#'   named `s_i`.
 #' @export
-sampler_gen <- function(x_names, ...) {
+sampler_gen_base <- function(x_names, ...) {
   function(population) {
     x <- as.matrix(population[x_names])
     population |>
@@ -36,10 +40,13 @@ sampler_gen <- function(x_names, ...) {
 
 #' With-replacement cube method sampling using dimensional increase
 #'
-#' @param population
+#' @param x_names A vector of the names of the auxiliary variables used to
+#'   balance the sample.
+#' @param ... Unused extra arguments.
 #'
-#' @return A sample with the same columns as the population, but with an
-#'   indicator of selection `s_i`.
+#' @return A sampling function, which given a population, returns a sample with
+#'   the same columns as the population, but with an indicator of selection
+#'   named `s_i` that can be between 0 and 1.
 #' @export
 sampler_gen_wr_copy <- function(x_names, ...) {
   function(population) {
@@ -56,14 +63,17 @@ sampler_gen_wr_copy <- function(x_names, ...) {
   }
 }
 
-#' Cube method fuzzy sampling (flight phase)
+#' Cube method (flight phase)
 #'
-#' @param population
+#' @param x_names A vector of the names of the auxiliary variables used to
+#'   balance the sample.
+#' @param ... Unused extra arguments.
 #'
-#' @return A sample with the same columns as the population, but with an
-#'   indicator of selection `s_i` that can be between 0 and 1.
+#' @return A sampling function, which given a population, returns a sample with
+#'   the same columns as the population, but with an indicator of selection
+#'   named `s_i` that can be between 0 and 1.
 #' @export
-sampler_gen_fuzzy_custom <- function(x_names,  ...) {
+sampler_gen_flight_base <- function(x_names,  ...) {
   function(population) {
     x <- as.matrix(population[x_names])
     population |>
@@ -73,48 +83,50 @@ sampler_gen_fuzzy_custom <- function(x_names,  ...) {
   }
 }
 
-#' With-replacement cube method fuzzy sampling (flight phase)
+#' With-replacement exhaustion cube method (flight phase)
 #'
-#' @param population
+#' @param x_names A vector of the names of the auxiliary variables used to
+#'   balance the sample.
+#' @param ... Unused extra arguments.
 #'
-#' @return A sample with the same columns as the population, but with an
-#'   indicator of selection `s_i` that can be between 0 and 1.
+#' @return A sampling function, which given a population, returns a sample with
+#'   the same columns as the population, but with an indicator of selection
+#'   named `s_i` that can be between 0 and 1.
 #' @export
-sampler_gen_fuzzy_wr <- function(x_names, ...) {
+sampler_gen_flight_wr_exh <- function(x_names, ...) {
   function(population) {
     x <- as.matrix(population[x_names])
     population |>
       mutate(
-        s_i = sample_cube_wr(.env$x, pi_i)
+        s_i = sample_cube_wr_exh(.env$x, pi_i)
       )
   }
 }
 
-#' With-replacement stepwise max-entropy cube method fuzzy sampling (flight phase)
+#' With-replacement stepwise max-entropy cube method (flight phase)
 #'
-#' @param x_names
-#' @param ...
+#' @param x_names A vector of the names of the auxiliary variables used to
+#'   balance the sample.
+#' @param ... Unused extra arguments.
 #'
-#' @return
+#' @return A sampling function, which given a population, returns a sample with
+#'   the same columns as the population, but with an indicator of selection
+#'   named `s_i` that can be between 0 and 1.
 #' @export
-sampler_gen_fuzzy_wr_ent <- function(x_names, ...) {
+sampler_gen_flight_wr_ent <- function(x_names, ...) {
   function(population) {
     x <- as.matrix(population[x_names])
     population |>
       mutate(
-        s_i = flight_phase_wr_ent(.env$x, pi_i)
+        s_i = flight_wr_ent(.env$x, pi_i)
       )
   }
 }
 
 
-reduc <- function(X, eps = 1e-11) {
-  s <- svd(X)
+## With-replacement exhaustion cube method ------------------------------------
 
-  s$u[, s$d > eps, drop = FALSE]
-}
-
-#' Jump step in the with-replacement cube method
+#' Jump step in the with-replacement exhaustion cube method
 #'
 #' Will select a random direction in the kernel of the balancing matrix and move
 #' the current sampling/inclusion probability vector to a new state. Given a
@@ -128,7 +140,7 @@ reduc <- function(X, eps = 1e-11) {
 #' @return The sampling vector after the jump.
 #'
 #' @examples
-jump_wr <- function(X, pik, eps = 1e-11) {
+jump_wr_exh <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
   X1 <- cbind(X, rep(0, times = N))
@@ -142,7 +154,7 @@ jump_wr <- function(X, pik, eps = 1e-11) {
   pik + (la1 - (la1 + la2) * rbinom(1, 1, q)) * kern
 }
 
-#' Flight phase of the with-replacement cube method
+#' Flight phase of the with-replacement exhaustion cube method
 #'
 #' @param X The balancing matrix.
 #' @param pik The inclusion probability vector.
@@ -152,7 +164,7 @@ jump_wr <- function(X, pik, eps = 1e-11) {
 #' @export
 #'
 #' @examples
-flight_wr <- function(X, pik, eps = 1e-11) {
+flight_wr_exh <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
   A <- X / pik
@@ -172,7 +184,7 @@ flight_wr <- function(X, pik, eps = 1e-11) {
 
     # Absolute value to prevent numerical instability of sign near zero
     # This matter when calling the floor function
-    psik <- abs(jump_wr(B, psik, eps))
+    psik <- abs(jump_wr_exh(B, psik, eps))
 
     n_select[ind] <- n_select[ind] + floor(psik + eps)
     psik <- psik - floor(psik + eps)
@@ -186,7 +198,7 @@ flight_wr <- function(X, pik, eps = 1e-11) {
   n_select
 }
 
-sample_cube_wr <- function(X, pik, eps = 1e-11) {
+sample_cube_wr_exh <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
   o <- sample.int(N, N)
@@ -194,7 +206,7 @@ sample_cube_wr <- function(X, pik, eps = 1e-11) {
   ind_remain <- o[abs(pik[o] - round(pik[o])) > eps]
   X_remain <- X[ind_remain, , drop = FALSE]
   while (length(ind_remain) > dim(X_remain)[2]) {
-    pik[ind_remain] <- flight_wr(X_remain, pik[ind_remain], eps)
+    pik[ind_remain] <- flight_wr_exh(X_remain, pik[ind_remain], eps)
     ind_remain <- o[abs(pik[o] - round(pik[o])) > eps]
     X_remain <- reduc(X[ind_remain, , drop = FALSE])
   }
@@ -203,7 +215,7 @@ sample_cube_wr <- function(X, pik, eps = 1e-11) {
 }
 
 
-## With replacement cube with max-entropy jump
+## With replacement cube with max-entropy jump --------------------------------
 
 jump_wr_ent <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
@@ -240,7 +252,7 @@ jump_wr_ent <- function(X, pik, eps = 1e-11) {
   )
 }
 
-flight_phase_wr_ent <- function(X, pik, eps = 1e-11) {
+flight_wr_ent <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
   A <- X / pik

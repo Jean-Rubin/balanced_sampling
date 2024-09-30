@@ -8,13 +8,13 @@ population_test <- tibble::tibble(
 X <- cbind(population_test$x, population_test$pi_i_aux)
 sample_test_size <- sum(population_test$pi_i)
 
-describe("flight_wr()", {
+describe("flight_wr_exh()", {
   nb_aux_var <- dim(X)[2]
   set.seed(1234)
   for (k in seq_len(100)) {
-    s <- flight_wr(X, population_test$pi_i, eps)
+    s <- flight_wr_exh(X, population_test$pi_i, eps)
     it("has p non-integer coordinates, where p is the number of auxiliary variables" |>
-      add_context(k), {
+        add_context(k), {
       expect_equal(sum(abs(round(s) - s) > eps), nb_aux_var)
     })
     it("verifies the balancing constraints" |> add_context(k), {
@@ -23,17 +23,17 @@ describe("flight_wr()", {
   }
 })
 
-describe("sample_cube_wr()", {
+describe("sample_cube_wr_exh()", {
   nb_aux_var <- dim(X)[2]
   set.seed(1234)
   for (k in seq_len(100)) {
-    s <- sample_cube_wr(X, population_test$pi_i, eps)
+    s <- sample_cube_wr_exh(X, population_test$pi_i, eps)
     it("has p non-integer coordinates, where p is the number of auxiliary variables" |>
-      add_context(k),
+        add_context(k),
       expect_equal(sum(abs(round(s) - s) > eps), nb_aux_var)
     )
     it("verifies the balancing constraints" |>
-      add_context(k),
+        add_context(k),
       expect_equal(colSums(X * s / population_test$pi_i), colSums(X))
     )
   }
@@ -46,15 +46,15 @@ describe("jump_wr_ent()", {
     n_select <- jump_result$pi_jump[jump_result$k_select]
 
     it("fixes the jumping coordinate to an integer" |>
-      add_context(k),
+        add_context(k),
       expect_true(abs(n_select - round(n_select)) < eps)
     )
     it("gives positive jumping probabilities" |>
-      add_context(k),
+        add_context(k),
       expect_true(all(jump_result$pi_jump > -eps))
     )
     it("verifies the balancing constraints" |>
-      add_context(k),
+        add_context(k),
       expect_equal(colSums(X * jump_result$pi_jump / population_test$pi_i), colSums(X))
     )
   }
@@ -69,9 +69,9 @@ describe("jump_wr_ent()", {
   })
 })
 
-describe("flight_phase_wr_ent()", {
+describe("flight_wr_ent()", {
   set.seed(1234)
-  s <- flight_phase_wr_ent(X, population_test$pi_i, eps)
+  s <- flight_wr_ent(X, population_test$pi_i, eps)
 
   it("verifies the balancing constraints", {
     expect_equal(colSums(X * s / population_test$pi_i), colSums(X))

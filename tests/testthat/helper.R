@@ -5,8 +5,10 @@ add_context <- function(text, ...) {
   names(kwargs)[no_names] <- purrr::map_chr(kwargs_quo[no_names], rlang::quo_name)
   kwargs[] <- purrr::map(
     kwargs,
-    \(x) capture.output(lobstr::tree(x)) |>
-      paste0(collapse = "\n")
+    \(x) {
+      capture.output(lobstr::tree(x)) |>
+        paste0(collapse = "\n")
+    }
   )
 
   paste0(

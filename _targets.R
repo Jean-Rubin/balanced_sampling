@@ -32,11 +32,11 @@ multi_step <- tar_map(
   values = list(iter = seq_len(n_multi)),
   # Samples from cube method
   tar_target(sample_base,
-    sampler_gen(x_names)(population)
+    sampler_gen_base(x_names)(population)
   ),
   # Samples from with-replacement exhaustion
   tar_target(sample_wr,
-    sampler_gen_fuzzy_wr(x_names)(population)
+    sampler_gen_flight_wr_exh(x_names)(population)
   ),
   # Pseudo population from basic cube sample
   tar_target(pseudo_population,
@@ -44,7 +44,7 @@ multi_step <- tar_map(
   ),
   # Bootstrap estimations from pseudo population
   tar_target(y_boots,
-    mc_estimate_total(pseudo_population, sampler_gen(x_names), n_iter_boot)
+    mc_estimate_total(pseudo_population, sampler_gen_base(x_names), n_iter_boot)
   ),
   # Estimated variance from pseudo population bootstrap
   tar_target(v_hat,
@@ -84,13 +84,13 @@ list(
     compute_total(population)
   ),
   tar_target(y_hats, # Estimators of total
-    mc_estimate_total(population, sampler_gen(x_names), n_iter_true)
+    mc_estimate_total(population, sampler_gen_base(x_names), n_iter_true)
   ),
   tar_target(v_true, # True variance of the estimator of total
     var(y_hats)
   ),
   tar_target(y_hats_wr, # Estimators of total from with-replacement exhaustion
-    mc_estimate_total(population, sampler_gen_fuzzy_wr(x_names), n_iter_true)
+    mc_estimate_total(population, sampler_gen_flight_base(x_names), n_iter_true)
   ),
   tar_target(v_true_wr, # Variance associated to with-replacement exhaustion
     var(y_hats_wr)
@@ -100,7 +100,7 @@ list(
   ),
   ## Single step ---------------------------------------------------------------
   tar_target(step_sample, # Basic cube sample
-    sampler_gen(x_names)(population)
+    sampler_gen_base(x_names)(population)
   ),
   # Basic SRSWOR sample (has an indicator of selection)
   tar_target(step_sample_srswor,
@@ -108,7 +108,7 @@ list(
   ),
   # With-replacement exhaustion sample
   tar_target(step_sample_wr,
-    sampler_gen_fuzzy_wr(x_names)(population)
+    sampler_gen_flight_wr_exh(x_names)(population)
   ),
   # Pseudo-population generated from basic cube sample
   tar_target(step_pseudo_population,
@@ -116,7 +116,7 @@ list(
   ),
   # Vector of bootstrap estimators of total generated from pseudo-population
   tar_target(step_y_boots,
-    mc_estimate_total(step_pseudo_population, sampler_gen(x_names), n_iter_boot)
+    mc_estimate_total(step_pseudo_population, sampler_gen_base(x_names), n_iter_boot)
   ),
   # Pseudo-population bootstrap variance estimator
   tar_target(step_v_hat,

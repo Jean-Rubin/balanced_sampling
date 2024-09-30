@@ -23,5 +23,5 @@ The variance associated to multiple sampling procedure can be applied.
 }
 \examples{
 population <- data.frame(y = 1:4, x1 = 5:8, pi_i = rep(0.2, 4))
-compute_true(population, list(base = sampler_gen("x1")), 20)
+compute_true(population, list(base = sampler_gen_base("x1")), 20)
 }

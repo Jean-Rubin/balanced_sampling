@@ -21,5 +21,5 @@ sampling using the same procedure.
 }
 \examples{
 population <- data.frame(y = 1:4, x1 = 5:8, pi_i = rep(0.2, 4))
-mc_estimate_total(population, sampler_gen("x1"), 20)
+mc_estimate_total(population, sampler_gen_base("x1"), 20)
 }

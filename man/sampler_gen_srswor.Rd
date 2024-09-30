@@ -7,11 +7,12 @@
 sampler_gen_srswor(...)
 }
 \arguments{
-\item{population}{}
+\item{...}{Unused extra arguments.}
 }
 \value{
-A sample with the same columns as the population, but with an
-indicator of selection \code{s_i}.
+A sampling function, which given a population, returns a sample with
+the same columns as the population, but with an indicator of selection
+named \code{s_i}.
 }
 \description{
 Standard without-replacement sampling
