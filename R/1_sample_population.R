@@ -98,7 +98,7 @@ sampler_gen_flight_wr_exh <- function(x_names, ...) {
     x <- as.matrix(population[x_names])
     population |>
       mutate(
-        s_i = sample_cube_wr_exh(.env$x, pi_i)
+        s_i = flight_wr_exh(.env$x, pi_i)
       )
   }
 }
@@ -167,7 +167,8 @@ jump_wr_exh <- function(X, pik, eps = 1e-11) {
 flight_wr_exh <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
-  A <- X / pik
+  random_perm <- sample.int(N, N)
+  A <- (X / pik)[random_perm, ]
   n_select <- numeric(N) # list of complete selection of units
   psik <- numeric(p + 1) # buffer of probability of selecting a unit
   B <- matrix(0, nrow = p + 1, ncol = p)
@@ -195,7 +196,7 @@ flight_wr_exh <- function(X, pik, eps = 1e-11) {
   # We regroup selected units and their probabilistic part
   n_select[ind] <- n_select[ind] + psik
 
-  n_select
+  n_select[order(random_perm)]
 }
 
 sample_cube_wr_exh <- function(X, pik, eps = 1e-11) {
