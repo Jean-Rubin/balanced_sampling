@@ -59,7 +59,7 @@ sampler_gen_wr_copy <- function(x_names, ...) {
         pi_i = pi_i / .env$n_copy
       )
 
-    sampler_gen(x_names)(wr_population)
+    sampler_gen_base(x_names)(wr_population)
   }
 }
 
