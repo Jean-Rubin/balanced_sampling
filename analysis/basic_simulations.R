@@ -3,7 +3,7 @@ library(dplyr)
 tar_source()
 tar_load(population)
 n_iter_true <- 1000L
-x_names <- c("x", "pi_i_aux")
+x_names <- c("x1", "pi_i_aux")
 n_samples <- c(50, 100, 200, 500, 750)
 
 sample_fn_list <- list(
@@ -86,4 +86,3 @@ fuzzy_design_df <- tibble(
 # 5      400    2840.   2567.     1544.
 # 6      500    1910.   2054.     1029.
 # 7      750    1304.   1369.      343.
-

@@ -37,6 +37,8 @@ mc_estimate_total <- function(
 #' @param sample_fn_list A named list of sampling functions to apply to the
 #'   population.
 #' @param n_iter_true Number of iterations of the Monte Carlo simulation.
+#' @param .progress_by_sample_fn If `TRUE`, display progress bar for each
+#'   sampling function Monte Carlo simulation.
 #'
 #' @return A named vector with the variance associated to each sampling
 #'   procedure. The names correspond to the names in the list.
@@ -44,11 +46,11 @@ mc_estimate_total <- function(
 #' @examples
 #' population <- data.frame(y = 1:4, x1 = 5:8, pi_i = rep(0.2, 4))
 #' compute_true(population, list(base = sampler_gen_base("x1")), 20)
-compute_v_trues <- function(population, sample_fn_list, n_iter_true) {
+compute_v_trues <- function(population, sample_fn_list, n_iter_true, .progress_by_sample_fn = FALSE) {
   y_hatss <- purrr::map(
     sample_fn_list,
     \(sample_fn) {
-      mc_estimate_total(population, sample_fn, n_iter_true, .progress = FALSE)
+      mc_estimate_total(population, sample_fn, n_iter_true, .progress = .progress_by_sample_fn)
     }
   )
   v_trues <- purrr::map_dbl(y_hatss, var)
