@@ -130,8 +130,8 @@ list(
   tar_target(noise_df,
     compute_noise_df(
       population,
-      noises = c(0.1, 0.5, 1, 2, 5, 10),
-      x_names = c("const", "pi_i_aux", "x1"),
+      noises = c(1, 2, 5, 10, 20),
+      x_names = c("const", "pi_i_aux", "x1", "x2", "x3"),
       n_iter_true = 1000L,
       sample_fn_list = get_sample_fn_list,
       v_approx_fn_list = get_v_approx_fn_list()
@@ -141,7 +141,7 @@ list(
   tar_target(table_noise,
     write_table_noise_tex(
       noise_df,
-      get_sample_fn_list(c("const", "pi_i_aux", "x1")),
+      get_sample_fn_list(c("const", "pi_i_aux", "x1", "x2", "x3")),
       get_v_approx_fn_list()
     ),
     format = "file"

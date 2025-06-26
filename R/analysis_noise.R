@@ -22,7 +22,8 @@ get_sample_fn_list <- function(x_names) {
     base = sampler_gen_base(x_names),
     base_flight = sampler_gen_flight_base(x_names),
     wr_flight_exh = sampler_gen_flight_wr_exh(x_names),
-    wr_copy = sampler_gen_wr_copy(x_names),
+    # wr_copy = sampler_gen_wr_copy(x_names),
+    wr_flight_copy = sampler_gen_wr_flight_copy(x_names),
     wr_ent_flight = sampler_gen_flight_wr_ent(x_names)
   )
 }
@@ -79,13 +80,13 @@ compute_noise_df <- function(
       \(noise) {
         population_noise <- population |>
           mutate(
-            # TODO expression is hard coded
-            lin_rel = 2 * x1,
-            y = lin_rel + rnorm(n(), mean = 0, sd = noise)
+            y = y - eps + rnorm(n(), mean = 0, sd = noise)
           )
 
+        lin_reg <- lm(reformulate(x_names, "y"), data = population_noise)
+
         r_squared <- population_noise |>
-          summarize(r_sq = 1 - mean((y - lin_rel)^2) / mean((y - mean(y))^2)) |>
+          summarize(r_sq = 1 - mean((y - predict(lin_reg))^2) / mean((y - mean(y))^2)) |>
           pull(r_sq)
 
         c(

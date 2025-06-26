@@ -63,6 +63,32 @@ sampler_gen_wr_copy <- function(x_names, ...) {
   }
 }
 
+#' With-replacement cube method sampling using dimensional increase (flight phase)
+#'
+#' @param x_names A vector of the names of the auxiliary variables used to
+#'   balance the sample.
+#' @param ... Unused extra arguments.
+#'
+#' @return A sampling function, which given a population, returns a sample with
+#'   the same columns as the population, but with an indicator of selection
+#'   named `s_i` that can be between 0 and 1.
+#' @export
+sampler_gen_wr_flight_copy <- function(x_names, ...) {
+  function(population) {
+    # Random rounding if non-integer sum
+    n_copy <- floor(runif(1) + sum(population[["pi_i"]]))
+    wr_population <- population |>
+      tidyr::uncount(.env$n_copy) |>
+      mutate(
+        y = y / .env$n_copy,
+        pi_i = pi_i / .env$n_copy
+      )
+
+    sampler_gen_flight_base(x_names)(wr_population)
+  }
+}
+
+
 #' Cube method (flight phase)
 #'
 #' @param x_names A vector of the names of the auxiliary variables used to
