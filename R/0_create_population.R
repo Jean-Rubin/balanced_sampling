@@ -59,6 +59,8 @@ pi_gen_beta <- function(a = 1, b = 5) {
 
 #' Uniform distribution probability generator
 #'
+#' Each individual has therefore the same inclusion probability.
+#'
 #' @param n_sample Number of element in the sample.
 #'
 #' @return A probability generator.
