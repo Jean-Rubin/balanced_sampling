@@ -131,7 +131,7 @@ list(
     compute_noise_df(
       population,
       noises = c(1, 2, 5, 10, 20),
-      x_names = c("const", "pi_i_aux", "x1", "x2", "x3"),
+      x_names = c("pi_i_aux", "x1", "x2", "x3"),
       n_iter_true = 1000L,
       sample_fn_list = get_sample_fn_list,
       v_approx_fn_list = get_v_approx_fn_list()
