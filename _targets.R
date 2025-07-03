@@ -141,7 +141,7 @@ list(
   tar_target(table_noise,
     write_table_noise_tex(
       noise_df,
-      get_sample_fn_list(c("const", "pi_i_aux", "x1", "x2", "x3")),
+      get_sample_fn_list(c("pi_i_aux", "x1", "x2", "x3")),
       get_v_approx_fn_list()
     ),
     format = "file"
