@@ -73,7 +73,7 @@ sampler_gen_wr_copy <- function(x_names, ...) {
 #'   the same columns as the population, but with an indicator of selection
 #'   named `s_i` that can be between 0 and 1.
 #' @export
-sampler_gen_wr_flight_copy <- function(x_names, ...) {
+sampler_gen_flight_wr_copy <- function(x_names, ...) {
   function(population) {
     # Random rounding if non-integer sum
     n_copy <- floor(runif(1) + sum(population[["pi_i"]]))
