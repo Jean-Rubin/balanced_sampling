@@ -83,7 +83,7 @@ compute_noise_df <- function(
             y = y - eps + rnorm(n(), mean = 0, sd = noise)
           )
 
-        lin_reg <- lm(reformulate(x_names, "y"), data = population_noise)
+        lin_reg <- lm(reformulate(c("0", x_names), "y"), data = population_noise)
 
         r_squared <- population_noise |>
           summarize(r_sq = 1 - mean((y - predict(lin_reg))^2) / mean((y - mean(y))^2)) |>
