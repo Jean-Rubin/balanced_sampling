@@ -55,4 +55,28 @@ close(pb)
 
 readr::write_csv(bind_rows(res_list), "results.csv")
 
-bind_rows(res_list)
+
+# wr_ent treated alone
+set.seed(42)
+sample_flight_wr_ent <- sampler_gen_flight_wr_ent(x_names)
+var_y_names <- paste0("y", 1:5)
+
+n_iter <- 10000
+y_hats <- vector(mode = "list", n_iter)
+
+for (i in seq_len(n_iter)) {
+  sample_noise <- population_noise |>
+    sample_flight_wr_ent()
+
+  y_hats[[i]] <- sample_noise |>
+    mutate(
+      across(all_of(var_y_names), \(y) y * s_i / pi_i)
+    ) |>
+    select(all_of(var_y_names)) |>
+    as.matrix() |>
+    colSums()
+  setTxtProgressBar(pb, i)
+}
+close(pb)
+
+readr::write_csv(bind_rows(y_hats), "y_hats.csv")
