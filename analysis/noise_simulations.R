@@ -1,7 +1,7 @@
 library(dplyr)
 library(purrr)
 library(targets)
-set.seed(42)
+set.seed(123)
 
 tar_source()
 tar_load(population)
@@ -12,11 +12,11 @@ n_iter_true <- 10000L
 sample_fn_list_1 <- list(
   srswor = sampler_gen_srswor(),
   base = sampler_gen_base(x_names),
-  base_flight = sampler_gen_flight_base(x_names),
-  wr_flight_exh = sampler_gen_flight_wr_exh(x_names),
+  base_flight = sampler_gen_flight_base(x_names)
+  # wr_flight_exh = sampler_gen_flight_wr_exh(x_names),
   # wr_copy = sampler_gen_wr_copy(x_names),
   # wr_flight_ent = sampler_gen_flight_wr_ent(x_names),
-  wr_flight_copy = sampler_gen_flight_wr_copy(x_names)
+  # wr_flight_copy = sampler_gen_flight_wr_copy(x_names)
 )
 v_approx_fn_list <- get_v_approx_fn_list()
 fixed_sample_fn_list <- sample_fn_list_1
@@ -30,7 +30,20 @@ population_noise <- population |>
     y5 = y - eps + rnorm(n(), mean = 0, sd = noises[5])
   )
 
+# R squared 
+r_squared <- purrr::map_dbl(1:5, \(i) {
+  lin_reg <- lm(reformulate(c("0", x_names), paste0("y", i)), data = population_noise)
+  y_i <- population_noise[[paste0("y", i)]]
+  
+  1 - mean((y_i - predict(lin_reg))^2) / mean((y_i - mean(y_i))^2)
+})
 
+# Variance approximations
+diag(v_approx_fn_list$v_deville(population_noise, x_names, y_names = paste0("y", 1:5)))
+diag(v_approx_fn_list$v_multi(population_noise, x_names, y_names = paste0("y", 1:5)))
+
+
+# Cube base methods
 res_list <- vector(mode = "list", length = length(noises))
 pb <- txtProgressBar(min = 0, max = length(noises), initial = 0, style = 3)
 for (i in seq_along(noises)) {
@@ -53,17 +66,62 @@ for (i in seq_along(noises)) {
 }
 close(pb)
 
-readr::write_csv(bind_rows(res_list), "results.csv")
+readr::write_csv(bind_rows(res_list), "output/results.csv")
+
+
+n_iter <- 10000
+var_y_names <- paste0("y", 1:5)
+pb <- txtProgressBar(min = 0, max = n_iter, initial = 0, style = 3)
+
+# wr_flight_exh treated alone
+set.seed(123)
+sample_flight_wr_exh <- sampler_gen_flight_wr_exh(x_names)
+
+y_hats <- vector(mode = "list", n_iter)
+for (i in seq_len(n_iter)) {
+  sample_noise <- population_noise |>
+    sample_flight_wr_exh()
+
+  y_hats[[i]] <- sample_noise |>
+    mutate(
+      across(all_of(var_y_names), \(y) y * s_i / pi_i)
+    ) |>
+    select(all_of(var_y_names)) |>
+    as.matrix() |>
+    colSums()
+  setTxtProgressBar(pb, i)
+}
+close(pb)
+readr::write_csv(bind_rows(y_hats), "output/y_hats_exh.csv")
+bind_rows(y_hats) |> summarize(across(everything(), var))
+
+# wr_copy treated alone
+set.seed(123)
+sample_flight_wr_copy <- sampler_gen_flight_wr_copy(x_names, var_y_names)
+
+y_hats <- vector(mode = "list", n_iter)
+for (i in seq_len(n_iter)) {
+  sample_noise <- population_noise |>
+    sample_flight_wr_copy()
+
+  y_hats[[i]] <- sample_noise |>
+    mutate(
+      across(all_of(var_y_names), \(y) y * s_i / pi_i)
+    ) |>
+    select(all_of(var_y_names)) |>
+    as.matrix() |>
+    colSums()
+  setTxtProgressBar(pb, i)
+}
+close(pb)
+readr::write_csv(bind_rows(y_hats), "output/y_hats_copy.csv")
 
 
 # wr_ent treated alone
-set.seed(42)
+set.seed(123)
 sample_flight_wr_ent <- sampler_gen_flight_wr_ent(x_names)
-var_y_names <- paste0("y", 1:5)
 
-n_iter <- 10000
 y_hats <- vector(mode = "list", n_iter)
-
 for (i in seq_len(n_iter)) {
   sample_noise <- population_noise |>
     sample_flight_wr_ent()
@@ -79,4 +137,17 @@ for (i in seq_len(n_iter)) {
 }
 close(pb)
 
-readr::write_csv(bind_rows(y_hats), "y_hats.csv")
+readr::write_csv(bind_rows(y_hats), "output/y_hats_ent.csv")
+
+
+
+purrr::map(
+  paste0("output/", c("y_hats_copy", "y_hats_exh", "y_hats_ent"), ".csv"),
+  \(path) {
+    readr::read_csv(path) |>
+      summarize(across(everything(), var))
+  }
+) |>
+  purrr::list_rbind()
+
+readr::read_csv("output/results.csv")
