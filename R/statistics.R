@@ -41,18 +41,20 @@ compute_covariance_multinomial <- function(x, y, pi_i) {
 #'
 #' @param population A data frame corresponding to the population.
 #'   It has:
-#'   - `y`: the variable of interest.
+#'   - `{y_names}`: the variables of interest.
+#'   - `{x_names}`: the auxiliary variables.
 #'   - `pi_i`: the inclusion probability of the individual.
 #' @param x_names A vector of the names of the auxiliary variables used to
 #'   balance the sample.
+#' @param y_names A vector of the names of the variable of interest.
 #'
 #' @inheritParams pseudo_inv
 #'
 #' @return A variance approximation of the total estimator of `y`.
 #' @export
-compute_v_approx_multinomial <- function(population, x_names, tol = 1e-6) {
+compute_v_approx_multinomial <- function(population, x_names, y_names = "y", tol = 1e-6) {
   x <- as.matrix(population[x_names])
-  y <- as.matrix(population$y)
+  y <- as.matrix(population[y_names])
   v_x <- compute_covariance_multinomial(x, x, population$pi_i)
   c_xy <- compute_covariance_multinomial(x, y, population$pi_i)
 
@@ -69,7 +71,8 @@ compute_v_approx_multinomial <- function(population, x_names, tol = 1e-6) {
 #'
 #' @param population A data frame corresponding to the population.
 #'   It has:
-#'   - `y`: the variable of interest.
+#'   - `{y_names}`: the variables of interest.
+#'   - `{x_names}`: the auxiliary variables.
 #'   - `pi_i`: the inclusion probability of the individual.
 #' @param x_names  A vector of the names of the auxiliary variables used to
 #'   balance the sample.
@@ -78,9 +81,9 @@ compute_v_approx_multinomial <- function(population, x_names, tol = 1e-6) {
 #'
 #' @return A variance approximation of the total estimator of `y`.
 #' @export
-compute_v_approx_deville_tille <- function(population, x_names, tol = 1e-6) {
+compute_v_approx_deville_tille <- function(population, x_names, y_names = "y", tol = 1e-6) {
   x <- as.matrix(population[x_names])
-  y <- as.matrix(population$y)
+  y <- as.matrix(population[y_names])
   pi_i <- population$pi_i
   n <- nrow(population)
   p <- length(x_names)

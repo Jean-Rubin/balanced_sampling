@@ -42,20 +42,21 @@ sampler_gen_base <- function(x_names, ...) {
 #'
 #' @param x_names A vector of the names of the auxiliary variables used to
 #'   balance the sample.
+#' @param y_names A vector with the names of the variables of interest.
 #' @param ... Unused extra arguments.
 #'
 #' @return A sampling function, which given a population, returns a sample with
 #'   the same columns as the population, but with an indicator of selection
 #'   named `s_i` that can be between 0 and 1.
 #' @export
-sampler_gen_wr_copy <- function(x_names, ...) {
+sampler_gen_wr_copy <- function(x_names, y_names = "y", ...) {
   function(population) {
     # Random rounding if non-integer sum
     n_copy <- floor(runif(1) + sum(population[["pi_i"]]))
     wr_population <- population |>
       tidyr::uncount(.env$n_copy) |>
       mutate(
-        y = y / .env$n_copy,
+        across(all_of(y_names), \(y) y / .env$n_copy),
         pi_i = pi_i / .env$n_copy
       )
 
@@ -67,20 +68,21 @@ sampler_gen_wr_copy <- function(x_names, ...) {
 #'
 #' @param x_names A vector of the names of the auxiliary variables used to
 #'   balance the sample.
+#' @param y_names A vector with the names of the variables of interest.
 #' @param ... Unused extra arguments.
 #'
 #' @return A sampling function, which given a population, returns a sample with
 #'   the same columns as the population, but with an indicator of selection
 #'   named `s_i` that can be between 0 and 1.
 #' @export
-sampler_gen_flight_wr_copy <- function(x_names, ...) {
+sampler_gen_flight_wr_copy <- function(x_names, y_names = "y", ...) {
   function(population) {
     # Random rounding if non-integer sum
     n_copy <- floor(runif(1) + sum(population[["pi_i"]]))
     wr_population <- population |>
       tidyr::uncount(.env$n_copy) |>
       mutate(
-        y = y / .env$n_copy,
+        across(all_of(y_names), \(y) y / .env$n_copy),
         pi_i = pi_i / .env$n_copy
       )
 

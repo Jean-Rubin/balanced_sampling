@@ -78,9 +78,9 @@ compute_v_trues <- function(population, sample_fn_list, n_iter_true, .progress_b
 #'   list(v_dt = compute_v_approx_deville_tille),
 #'   "x1"
 #' )
-compute_v_approxs <- function(population, v_approx_fn_list, x_names) {
+compute_v_approxs <- function(population, v_approx_fn_list, x_names, ...) {
   purrr::map_dbl(
     v_approx_fn_list,
-    \(v_approx_fn) v_approx_fn(population, x_names)
+    \(v_approx_fn) v_approx_fn(population, x_names, ...)
   )
 }
