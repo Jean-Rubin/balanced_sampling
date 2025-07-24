@@ -109,6 +109,7 @@ compute_noise_df <- function(
 #'   producing the table.
 #' @param v_approx_fn_list List of approximation functions that where used for
 #'   producing the table.
+#' @param output_path Path to save the tex file.
 #'
 #' @return The path where the table was saved.
 #' @export
@@ -128,7 +129,7 @@ write_table_noise_tex <- function(
       "Variance MC" = length(fixed_sample_fn_list),
       "Variance Approximation" = length(v_approx_fn_list)
     )) |>
-    kableExtra::save_kable("output/table/noise.tex")
+    kableExtra::save_kable(output_path)
 
-  "output/table/noise.tex"
+  output_path
 }

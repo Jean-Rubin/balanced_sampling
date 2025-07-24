@@ -77,7 +77,7 @@ list(
   tar_target(x_names, c("x1", "pi_i_aux")), # Names of auxiliary variables
   ## Main baseline -------------------------------------------------------------
   tar_target(population, # Population
-    create_population(n_tot) |>
+    create_population(n_tot, seed = 42) |>
       set_inclusion_proba(pi_gen_unif(n_sample = n_sample))
   ),
   tar_target(y_true, # Total of `y` on the population
@@ -142,7 +142,8 @@ list(
     write_table_noise_tex(
       noise_df,
       get_sample_fn_list(c("pi_i_aux", "x1", "x2", "x3")),
-      get_v_approx_fn_list()
+      get_v_approx_fn_list(),
+      output_path = "output/table/noise.tex"
     ),
     format = "file"
   )

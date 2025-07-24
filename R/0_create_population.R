@@ -9,7 +9,8 @@
 #' @export
 #' @examples
 #' create_population(10, noise = 1)
-create_population <- function(n_tot, noise = 1) {
+create_population <- function(n_tot, noise = 1, seed = NA_integer_) {
+  if(!is.na(seed)) { set.seed(seed) }
   tibble(
     const = 1,
     x1 = rnorm(n_tot, mean = 10, sd = 1),
