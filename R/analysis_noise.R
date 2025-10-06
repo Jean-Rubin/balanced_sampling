@@ -105,16 +105,16 @@ compute_noise_df <- function(
 #' The table is written in the LaTeX format.
 #'
 #' @param result_df Table result of the experiment for varying level of noise.
-#' @param fixed_sample_fn_list List of sampling functions that where used for
+#' @param n_sample_fn Number of sampling functions that where used for
 #'   producing the table.
-#' @param v_approx_fn_list List of approximation functions that where used for
+#' @param n_v_approx Number of approximation functions that where used for
 #'   producing the table.
 #' @param output_path Path to save the tex file.
 #'
 #' @return The path where the table was saved.
 #' @export
 write_table_noise_tex <- function(
-  result_df, fixed_sample_fn_list, v_approx_fn_list
+  result_df, n_sample_fn, n_v_approx, output_path
 ) {
   result_df |>
     mutate(across(-noise, \(x) signif(x, digits = 3))) |>
@@ -126,8 +126,8 @@ write_table_noise_tex <- function(
     ) |>
     kableExtra::add_header_above(c(
       "", "",
-      "Variance MC" = length(fixed_sample_fn_list),
-      "Variance Approximation" = length(v_approx_fn_list)
+      "Variance MC" = n_sample_fn,
+      "Variance Approximation" = n_v_approx
     )) |>
     kableExtra::save_kable(output_path)
 

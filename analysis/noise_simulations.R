@@ -21,6 +21,7 @@ sample_fn_list_1 <- list(
 v_approx_fn_list <- get_v_approx_fn_list()
 fixed_sample_fn_list <- sample_fn_list_1
 
+set.seed(123)
 population_noise <- population |>
   mutate(
     y1 = y - eps + rnorm(n(), mean = 0, sd = noises[1]),
@@ -44,6 +45,7 @@ diag(v_approx_fn_list$v_multi(population_noise, x_names, y_names = paste0("y", 1
 
 
 # Cube base methods
+set.seed(123)
 res_list <- vector(mode = "list", length = length(noises))
 pb <- txtProgressBar(min = 0, max = length(noises), initial = 0, style = 3)
 for (i in seq_along(noises)) {
@@ -65,11 +67,17 @@ for (i in seq_along(noises)) {
   setTxtProgressBar(pb, i)
 }
 close(pb)
+bind_rows(res_list)
 
-readr::write_csv(bind_rows(res_list), "output/results.csv")
+write_table_noise_tex(
+  bind_rows(res_list),
+  length(fixed_sample_fn_list),
+  length(v_approx_fn_list),
+  "output/table/noise.tex"
+)
 
 
-n_iter <- 10000
+n_iter <- 10000L
 var_y_names <- paste0("y", 1:5)
 pb <- txtProgressBar(min = 0, max = n_iter, initial = 0, style = 3)
 
@@ -99,6 +107,7 @@ bind_rows(y_hats) |> summarize(across(everything(), var))
 set.seed(123)
 sample_flight_wr_copy <- sampler_gen_flight_wr_copy(x_names, var_y_names)
 
+tictoc::tic()
 y_hats <- vector(mode = "list", n_iter)
 for (i in seq_len(n_iter)) {
   sample_noise <- population_noise |>
@@ -115,12 +124,13 @@ for (i in seq_len(n_iter)) {
 }
 close(pb)
 readr::write_csv(bind_rows(y_hats), "output/y_hats_copy.csv")
-
+tictoc::toc()
 
 # wr_ent treated alone
 set.seed(123)
 sample_flight_wr_ent <- sampler_gen_flight_wr_ent(x_names)
 
+tictoc::tic()
 y_hats <- vector(mode = "list", n_iter)
 for (i in seq_len(n_iter)) {
   sample_noise <- population_noise |>
@@ -136,13 +146,11 @@ for (i in seq_len(n_iter)) {
   setTxtProgressBar(pb, i)
 }
 close(pb)
-
 readr::write_csv(bind_rows(y_hats), "output/y_hats_ent.csv")
-
-
+tictoc::toc()
 
 purrr::map(
-  paste0("output/", c("y_hats_copy", "y_hats_exh", "y_hats_ent"), ".csv"),
+  paste0("output/", c("y_hats_exh", "y_hats_ent", "y_hats_copy"), ".csv"),
   \(path) {
     readr::read_csv(path) |>
       summarize(across(everything(), var))
