@@ -29,7 +29,17 @@ population_noise <- population |>
     y3 = y - eps + rnorm(n(), mean = 0, sd = noises[3]),
     y4 = y - eps + rnorm(n(), mean = 0, sd = noises[4]),
     y5 = y - eps + rnorm(n(), mean = 0, sd = noises[5])
-  )
+  ) 
+
+population_noise <- population_noise |>
+  set_inclusion_proba(pi_gen_beta(10, 100))
+
+ggplot(population_noise, aes(x = pi_i)) +
+  geom_histogram(bins = 25) +
+  scale_x_continuous(n.breaks = 10) +
+  labs(x = "Inclusion probability", y = "Number of observations")
+
+ggsave("output/inclusion_probabilities.pdf")
 
 # R squared 
 r_squared <- purrr::map_dbl(1:5, \(i) {
