@@ -161,11 +161,15 @@ tictoc::toc()
 
 purrr::map(
   paste0("output/", c("y_hats_exh", "y_hats_ent", "y_hats_copy"), ".csv"),
-  \(path) {
-    readr::read_csv(path) |>
-      summarize(across(everything(), var))
-  }
+  \(path) readr::read_csv(path) |> 
+    tidyr::pivot_longer(everything()) |>
+    mutate(method = .env$path)
 ) |>
-  purrr::list_rbind()
+  purrr::list_rbind() |>
+  summarize(
+    mean(value),
+    var(value),
+    .by = c(name, method)
+  )
 
 readr::read_csv("output/results.csv")
