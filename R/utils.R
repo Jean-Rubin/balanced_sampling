@@ -24,6 +24,7 @@ pseudo_inv <- function(x, tol = 1e-6) {
 #' @examples
 #' reduc(matrix(c(1, 2, 3, 4), nrow = 2), eps = 1e-10)
 reduc <- function(X, eps = 1e-11) {
+  if(any(dim(X) == 0)) return(X)
   s <- svd(X)
 
   s$u[, s$d > eps, drop = FALSE]

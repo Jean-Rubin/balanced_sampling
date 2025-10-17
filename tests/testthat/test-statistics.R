@@ -36,15 +36,21 @@ describe("compute_v_approx_multinomial()", {
   it("computes a covariance matrix", {
     expect_equal(
       compute_v_approx_multinomial(population_test, "x"),
-      matrix(4)
+      matrix(4) |>
+        `rownames<-`("y") |>
+        `colnames<-`("y")
     )
     expect_equal(
       compute_v_approx_multinomial(population_test, "pi_i_aux"),
-      matrix(16)
+      matrix(16) |>
+        `rownames<-`("y") |>
+        `colnames<-`("y")
     )
     expect_equal(
       compute_v_approx_multinomial(population_test, c("x", "pi_i_aux")),
-      matrix(4)
+      matrix(4) |>
+        `rownames<-`("y") |>
+        `colnames<-`("y")
     )
   })
 })

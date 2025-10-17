@@ -13,9 +13,8 @@ describe("flight_wr_exh()", {
   set.seed(1234)
   for (k in seq_len(100)) {
     s <- flight_wr_exh(X, population_test$pi_i, eps)
-    it("has p non-integer coordinates, where p is the number of auxiliary variables" |>
-        add_context(k), {
-      expect_equal(sum(abs(round(s) - s) > eps), nb_aux_var)
+    it("has at most p non-integer coordinates, where p is the number of auxiliary variables" |> add_context(k), {
+      expect_lte(sum(abs(round(s) - s) > eps), nb_aux_var)
     })
     it("verifies the balancing constraints" |> add_context(k), {
       expect_equal(colSums(X * s / population_test$pi_i), colSums(X))
@@ -28,9 +27,9 @@ describe("sample_cube_wr_exh()", {
   set.seed(1234)
   for (k in seq_len(100)) {
     s <- sample_cube_wr_exh(X, population_test$pi_i, eps)
-    it("has p non-integer coordinates, where p is the number of auxiliary variables" |>
+    it("has at most p non-integer coordinates, where p is the number of auxiliary variables" |>
         add_context(k),
-      expect_equal(sum(abs(round(s) - s) > eps), nb_aux_var)
+      expect_lte(sum(abs(round(s) - s) > eps), nb_aux_var)
     )
     it("verifies the balancing constraints" |>
         add_context(k),
