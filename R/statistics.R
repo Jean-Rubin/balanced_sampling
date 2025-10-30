@@ -76,6 +76,7 @@ compute_v_approx_multinomial <- function(population, x_names, y_names = "y", tol
 #'   - `pi_i`: the inclusion probability of the individual.
 #' @param x_names  A vector of the names of the auxiliary variables used to
 #'   balance the sample.
+#' @param y_names A vector of the names of the variable of interest.
 #'
 #' @inheritParams pseudo_inv
 #'
@@ -94,4 +95,36 @@ compute_v_approx_deville_tille <- function(population, x_names, y_names = "y", t
   delta <- diag(pi_i * (1 - pi_i))
 
   (n / (n - p)) * (t(e / pi_i) %*% delta) %*% (e / pi_i)
+}
+
+#' Deville-Tillé approximation of the variance of a balanced sample on a duplicated population
+#'
+#' @param population A data frame corresponding to the (unduplicated) population.
+#'   It has:
+#'   - `{y_names}`: the variables of interest.
+#'   - `{x_names}`: the auxiliary variables.
+#'   - `pi_i`: the inclusion probability of the (unduplicated) individual.
+#' @param x_names  A vector of the names of the auxiliary variables used to
+#'   balance the sample.
+#' @param y_names A vector of the names of the variable of interest.
+#'
+#' @inheritParams pseudo_inv
+#'
+#' @return A variance approximation of the total estimator of `y`.
+#' @export
+compute_v_approx_deville_tille_duplicate <- function(
+  population, x_names, y_names = "y", n_duplication = 100, tol = 1e-6
+) {
+  x <- as.matrix(population[x_names])
+  y <- as.matrix(population[y_names])
+  pi_i <- population$pi_i
+  n <- nrow(population)
+  p <- length(x_names)
+
+  x_diag_p <- t(x) %*% diag((n_duplication - pi_i) / pi_i, ncol = length(pi_i))
+  beta <- pseudo_inv(x_diag_p %*% x, tol) %*% x_diag_p %*% y
+  e <- y - x %*% beta
+  delta <- diag((n_duplication - pi_i) / pi_i)
+
+  (n / (n * n_duplication - p)) * (t(e) %*% delta) %*% e
 }

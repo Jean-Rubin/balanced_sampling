@@ -37,6 +37,7 @@ get_sample_fn_list <- function(x_names) {
 get_v_approx_fn_list <- function() {
   list(
     v_multi = compute_v_approx_multinomial,
+    v_deville_dup = compute_v_approx_deville_tille_duplicate,
     v_deville = compute_v_approx_deville_tille
   )
 }

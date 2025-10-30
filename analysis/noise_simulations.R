@@ -29,10 +29,10 @@ population_noise <- population |>
     y3 = y - eps + rnorm(n(), mean = 0, sd = noises[3]),
     y4 = y - eps + rnorm(n(), mean = 0, sd = noises[4]),
     y5 = y - eps + rnorm(n(), mean = 0, sd = noises[5])
-  ) 
+  )
 
 population_noise <- population_noise |>
-  set_inclusion_proba(pi_gen_beta(10, 100))
+  set_inclusion_proba(pi_gen_unif(100))
 
 ggplot(population_noise, aes(x = pi_i)) +
   geom_histogram(bins = 25) +
@@ -52,7 +52,9 @@ r_squared <- purrr::map_dbl(1:5, \(i) {
 # Variance approximations
 diag(v_approx_fn_list$v_deville(population_noise, x_names, y_names = paste0("y", 1:5)))
 diag(v_approx_fn_list$v_multi(population_noise, x_names, y_names = paste0("y", 1:5)))
-
+diag(v_approx_fn_list$v_deville_dup(
+  population_noise, x_names, y_names = paste0("y", 1:5), n_duplication = 100
+))
 
 # Cube base methods
 set.seed(123)
