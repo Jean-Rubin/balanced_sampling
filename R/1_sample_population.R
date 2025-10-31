@@ -161,18 +161,18 @@ sampler_gen_flight_wr_ent <- function(x_names, ...) {
 #' direction, two candidate states are selected, corresponding to the moment
 #' where a unit is unselected.
 #'
-#' @param X The balancing matrix.
+#' @param A The balancing matrix.
 #' @param pik The sampling/inclusion probability vector before jumping.
 #' @param eps A threshold for determining if a value is null.
 #'
 #' @return The sampling vector after the jump.
 #'
 #' @examples
-jump_wr_exh <- function(X, pik, eps = 1e-11) {
-  N <- dim(X)[1]
-  p <- dim(X)[2]
-  X1 <- cbind(X, rep(0, times = N))
-  kern <- svd(X1)$u[, p + 1]
+jump_wr_exh <- function(A, pik, eps = 1e-11) {
+  N <- dim(A)[1]
+  p <- dim(A)[2]
+  A1 <- cbind(A, rep(0, times = N))
+  kern <- svd(A1)$u[, p + 1]
   idx_kern <- abs(kern) > eps
   buff <- -pik[idx_kern] / kern[idx_kern]
   la1 <- min(buff[buff >= 0])
@@ -252,11 +252,26 @@ sample_cube_wr_exh <- function(X, pik, eps = 1e-11) {
 
 ## With replacement cube with max-entropy jump --------------------------------
 
-jump_wr_ent <- function(X, pik, eps = 1e-11) {
-  N <- dim(X)[1]
-  p <- dim(X)[2]
-  X1 <- cbind(X, rep(0, times = N))
-  u_kern <- svd(X1)$u[, p + 1]
+#' Jump step in the with-replacement max-entropy cube method
+#'
+#' Will select a random direction in the kernel of the balancing matrix and move
+#' the current sampling/inclusion probability vector to a new state. Given a
+#' direction, all possible candidate states are considered, and one of them is
+#' chosen according to the probability distribution of maximum entropy among the
+#' ones who satisfy the martingale constraint.
+#'
+#' @param A The balancing matrix.
+#' @param pik The sampling/inclusion probability vector before jumping.
+#' @param eps A threshold for determining if a value is null.
+#'
+#' @return The sampling vector after the jump.
+#'
+#' @examples
+jump_wr_ent <- function(A, pik, eps = 1e-11) {
+  N <- dim(A)[1]
+  p <- dim(A)[2]
+  A1 <- cbind(A, rep(0, times = N))
+  u_kern <- svd(A1)$u[, p + 1]
 
   # find jump candidates
   # Some values are eventually infinite here
@@ -287,6 +302,16 @@ jump_wr_ent <- function(X, pik, eps = 1e-11) {
   )
 }
 
+#' Flight phase of the with-replacement max-entropy cube method
+#'
+#' @param X The matrix of auxiliary variables for balanced constraints.
+#' @param pik The inclusion probability vector.
+#' @param eps A threshold for determining if a value is null.
+#'
+#' @return A sampling vector of multiplicities
+#' @export
+#'
+#' @examples
 flight_wr_ent <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
