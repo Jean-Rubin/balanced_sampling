@@ -184,7 +184,7 @@ jump_wr_exh <- function(X, pik, eps = 1e-11) {
 
 #' Flight phase of the with-replacement exhaustion cube method
 #'
-#' @param X The balancing matrix.
+#' @param X The matrix of auxiliary variables for balanced constraints.
 #' @param pik The inclusion probability vector.
 #' @param eps A threshold for determining if a value is null.
 #'
@@ -195,18 +195,23 @@ jump_wr_exh <- function(X, pik, eps = 1e-11) {
 flight_wr_exh <- function(X, pik, eps = 1e-11) {
   N <- dim(X)[1]
   p <- dim(X)[2]
+  # Randomizing the order of units
   random_perm <- sample.int(N, N)
   A <- (X / pik)[random_perm, ]
-  n_select <- numeric(N) # list of complete selection of units
-  psik <- numeric(p + 1) # buffer of probability of selecting a unit
+  pik <- pik[random_perm]
+  n_select <- numeric(N) # List of complete selection of units
+  psik <- numeric(p + 1) # Buffer of probability of selecting a unit
   B <- matrix(0, nrow = p + 1, ncol = p)
-  ind <- 1:(p + 1)
-  idx_rej <- 1:(p + 1)
-  idx_next <- 1:(p + 1)
+  ind <- 1:(p + 1) # Currently considered units
+  idx_rej <- 1:(p + 1) # Pool indices to replace (locally rejected units)
+  idx_next <- 1:(p + 1) # Next units to consider (replacement units)
   while (length(idx_next) > 0 && idx_next[1] <= N) {
-    nb_valid_ind <- sum(idx_next <= N)
-    idx_next <- idx_next[seq_len(nb_valid_ind)]
-    idx_rej <- idx_rej[seq_len(nb_valid_ind)]
+    # Restriction to valid units
+    idx_valid <- idx_next <= N
+    idx_rej <- idx_rej[idx_valid]
+    idx_next <- idx_next[idx_valid]
+
+    # Replace rejected units in the pool by the next units to consider
     psik[idx_rej] <- pik[idx_next]
     B[idx_rej, ] <- A[idx_next, ]
     ind[idx_rej] <- idx_next
@@ -224,6 +229,7 @@ flight_wr_exh <- function(X, pik, eps = 1e-11) {
   # We regroup selected units and their probabilistic part
   n_select[ind] <- n_select[ind] + psik
 
+  # Revert the random permutation at the end
   n_select[order(random_perm)]
 }
 
