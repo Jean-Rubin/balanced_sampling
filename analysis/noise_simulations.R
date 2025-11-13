@@ -1,5 +1,6 @@
 library(dplyr)
 library(purrr)
+library(ggplot2)
 library(targets)
 set.seed(123)
 
@@ -32,7 +33,8 @@ population_noise <- population |>
   )
 
 population_noise <- population_noise |>
-  set_inclusion_proba(pi_gen_unif(100))
+  # set_inclusion_proba(pi_gen_unif(100))
+  set_inclusion_proba(pi_gen_prop_size(100, population_noise$x1))
 
 ggplot(population_noise, aes(x = pi_i)) +
   geom_histogram(bins = 25) +
@@ -45,7 +47,7 @@ ggsave("output/inclusion_probabilities.pdf")
 r_squared <- purrr::map_dbl(1:5, \(i) {
   lin_reg <- lm(reformulate(c("0", x_names), paste0("y", i)), data = population_noise)
   y_i <- population_noise[[paste0("y", i)]]
-  
+
   1 - mean((y_i - predict(lin_reg))^2) / mean((y_i - mean(y_i))^2)
 })
 
@@ -163,9 +165,11 @@ tictoc::toc()
 
 purrr::map(
   paste0("output/", c("y_hats_exh", "y_hats_ent", "y_hats_copy"), ".csv"),
-  \(path) readr::read_csv(path) |> 
-    tidyr::pivot_longer(everything()) |>
-    mutate(method = .env$path)
+  \(path) {
+    readr::read_csv(path) |>
+      tidyr::pivot_longer(everything()) |>
+      mutate(method = .env$path)
+  }
 ) |>
   purrr::list_rbind() |>
   summarize(
