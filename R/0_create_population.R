@@ -15,9 +15,9 @@ create_population <- function(n_tot, noise = 1, seed = NA_integer_) {
     const = 1,
     x1 = rnorm(n_tot, mean = 10, sd = 1),
     x2 = rnorm(n_tot, mean = -1, sd = 5),
-    x3 = rnorm(n_tot, mean = 3, sd = 1),
+    x3 = rexp(n_tot, rate = 0.1),
     eps = rnorm(n_tot, mean = 0, sd = noise),
-    y = 10 + 4 * x1 + x2 - 3 * x3 + eps
+    y = 10 + 4 * x1 + x2 - 2 * x3 + eps
   )
 }
 

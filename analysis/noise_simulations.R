@@ -9,7 +9,7 @@ tar_load(population)
 
 noises <- c(1, 2, 5, 10, 20)
 x_names <- c("pi_i_aux", "x1", "x2", "x3")
-n_iter_true <- 10000L
+n_iter_true <- 1000L
 sample_fn_list_1 <- list(
   srswor = sampler_gen_srswor(),
   base = sampler_gen_base(x_names),
@@ -22,19 +22,19 @@ sample_fn_list_1 <- list(
 v_approx_fn_list <- get_v_approx_fn_list()
 fixed_sample_fn_list <- sample_fn_list_1
 
-set.seed(123)
 population_noise <- population |>
   mutate(
-    y1 = y - eps + rnorm(n(), mean = 0, sd = noises[1]),
-    y2 = y - eps + rnorm(n(), mean = 0, sd = noises[2]),
-    y3 = y - eps + rnorm(n(), mean = 0, sd = noises[3]),
-    y4 = y - eps + rnorm(n(), mean = 0, sd = noises[4]),
-    y5 = y - eps + rnorm(n(), mean = 0, sd = noises[5])
+    y1 = y - eps + sqrt(x3) * rnorm(n(), mean = 0, sd = noises[1]),
+    y2 = y - eps + sqrt(x3) * rnorm(n(), mean = 0, sd = noises[2]),
+    y3 = y - eps + sqrt(x3) * rnorm(n(), mean = 0, sd = noises[3]),
+    y4 = y - eps + sqrt(x3) * rnorm(n(), mean = 0, sd = noises[4]),
+    y5 = y - eps + sqrt(x3) * rnorm(n(), mean = 0, sd = noises[5])
   )
 
 population_noise <- population_noise |>
   # set_inclusion_proba(pi_gen_unif(100))
-  set_inclusion_proba(pi_gen_prop_size(100, population_noise$x1))
+  set_inclusion_proba(pi_gen_prop_size(100, sqrt(population_noise$x3)))
+  # set_inclusion_proba(pi_gen_prop_size(100, population_noise$x3))
 
 ggplot(population_noise, aes(x = pi_i)) +
   geom_histogram(bins = 25) +
@@ -59,7 +59,7 @@ diag(v_approx_fn_list$v_deville_dup(
 ))
 
 # Cube base methods
-set.seed(123)
+set.seed(8945)
 res_list <- vector(mode = "list", length = length(noises))
 pb <- txtProgressBar(min = 0, max = length(noises), initial = 0, style = 3)
 for (i in seq_along(noises)) {
@@ -91,7 +91,7 @@ write_table_noise_tex(
 )
 
 
-n_iter <- 10000L
+n_iter <- 1000L
 var_y_names <- paste0("y", 1:5)
 pb <- txtProgressBar(min = 0, max = n_iter, initial = 0, style = 3)
 
@@ -176,6 +176,6 @@ purrr::map(
     mean(value),
     var(value),
     .by = c(name, method)
-  )
+  ) |> readr::write_csv("output/results.csv")
 
 readr::read_csv("output/results.csv")
