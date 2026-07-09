@@ -13,11 +13,11 @@ create_population <- function(n_tot, noise = 1, seed = NA_integer_) {
   if(!is.na(seed)) { set.seed(seed) }
   tibble(
     const = 1,
-    x1 = rnorm(n_tot, mean = 10, sd = 1),
-    x2 = rnorm(n_tot, mean = -1, sd = 5),
-    x3 = rexp(n_tot, rate = 0.1),
+    x1 = rgamma(n_tot, shape = 5, scale = 2),
+    x2 = rgamma(n_tot, shape = 5, scale = 2),
+    x3 = rgamma(n_tot, shape = 5, scale = 2),
     eps = rnorm(n_tot, mean = 0, sd = noise),
-    y = 10 + 4 * x1 + x2 - 2 * x3 + eps
+    y = 10 + x1 + x2 + x3 + eps
   )
 }
 
