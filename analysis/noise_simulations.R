@@ -12,8 +12,8 @@ x_names <- c("pi_i_aux", "x1", "x2", "x3")
 n_iter_true <- 1000L
 sample_fn_list_1 <- list(
   srswor = sampler_gen_srswor(),
-  base = sampler_gen_base(x_names),
-  base_flight = sampler_gen_flight_base(x_names)
+  # base = sampler_gen_base(x_names),
+  # base_flight = sampler_gen_flight_base(x_names)
   # wr_flight_exh = sampler_gen_flight_wr_exh(x_names),
   # wr_copy = sampler_gen_wr_copy(x_names),
   # wr_flight_ent = sampler_gen_flight_wr_ent(x_names),
@@ -90,8 +90,48 @@ write_table_noise_tex(
   "output/table/noise.tex"
 )
 
-
+# Cube based method
+set.seed(98761)
+tictoc::tic()
 n_iter <- 1000L
+var_y_names <- paste0("y", 1:5)
+pb <- txtProgressBar(min = 0, max = n_iter, initial = 0, style = 3)
+y_hats_base_flight <- vector(mode = "list", n_iter)
+y_hats_base <- vector(mode = "list", n_iter)
+for (i in seq_len(n_iter)) {
+  x <- as.matrix(population_noise[x_names])
+  sample_noise <- population_noise |>
+    mutate(
+      s_i = sampling::fastflightcube(.env$x, pi_i, comment = FALSE),
+      s_i_land = sampling::landingcube(.env$x, s_i, pi_i, comment = FALSE)
+    )
+
+  y_hats_base_flight[[i]] <- sample_noise |>
+    mutate(
+      across(all_of(var_y_names), \(y) y * s_i / pi_i)
+    ) |>
+    select(all_of(var_y_names)) |>
+    as.matrix() |>
+    colSums()
+
+  y_hats_base[[i]] <- sample_noise |>
+    mutate(
+      across(all_of(var_y_names), \(y) y * s_i_land / pi_i)
+    ) |>
+    select(all_of(var_y_names)) |>
+    as.matrix() |>
+    colSums()
+
+  setTxtProgressBar(pb, i)
+}
+close(pb)
+tictoc::toc()
+readr::write_csv(bind_rows(y_hats_base_flight), "output/y_hats_base_flight.csv")
+readr::write_csv(bind_rows(y_hats_base), "output/y_hats_base.csv")
+bind_rows(y_hats_base_flight) |> summarize(across(everything(), var))
+bind_rows(y_hats_base) |> summarize(across(everything(), var))
+
+
 var_y_names <- paste0("y", 1:5)
 pb <- txtProgressBar(min = 0, max = n_iter, initial = 0, style = 3)
 
@@ -99,12 +139,12 @@ pb <- txtProgressBar(min = 0, max = n_iter, initial = 0, style = 3)
 set.seed(123)
 sample_flight_wr_exh <- sampler_gen_flight_wr_exh(x_names)
 
-y_hats <- vector(mode = "list", n_iter)
+y_hats_exh <- vector(mode = "list", n_iter)
 for (i in seq_len(n_iter)) {
   sample_noise <- population_noise |>
     sample_flight_wr_exh()
 
-  y_hats[[i]] <- sample_noise |>
+  y_hats_exh[[i]] <- sample_noise |>
     mutate(
       across(all_of(var_y_names), \(y) y * s_i / pi_i)
     ) |>
@@ -114,20 +154,20 @@ for (i in seq_len(n_iter)) {
   setTxtProgressBar(pb, i)
 }
 close(pb)
-readr::write_csv(bind_rows(y_hats), "output/y_hats_exh.csv")
-bind_rows(y_hats) |> summarize(across(everything(), var))
+readr::write_csv(bind_rows(y_hats_exh), "output/y_hats_exh.csv")
+bind_rows(y_hats_exh) |> summarize(across(everything(), var))
 
 # wr_copy treated alone
 set.seed(123)
 sample_flight_wr_copy <- sampler_gen_flight_wr_copy(x_names, var_y_names)
 
 tictoc::tic()
-y_hats <- vector(mode = "list", n_iter)
+y_hats_copy <- vector(mode = "list", n_iter)
 for (i in seq_len(n_iter)) {
   sample_noise <- population_noise |>
     sample_flight_wr_copy()
 
-  y_hats[[i]] <- sample_noise |>
+  y_hats_copy[[i]] <- sample_noise |>
     mutate(
       across(all_of(var_y_names), \(y) y * s_i / pi_i)
     ) |>
@@ -137,7 +177,7 @@ for (i in seq_len(n_iter)) {
   setTxtProgressBar(pb, i)
 }
 close(pb)
-readr::write_csv(bind_rows(y_hats), "output/y_hats_copy.csv")
+readr::write_csv(bind_rows(y_hats_copy), "output/y_hats_copy.csv")
 tictoc::toc()
 
 # wr_ent treated alone
@@ -145,12 +185,12 @@ set.seed(123)
 sample_flight_wr_ent <- sampler_gen_flight_wr_ent(x_names)
 
 tictoc::tic()
-y_hats <- vector(mode = "list", n_iter)
+y_hats_wr_ent <- vector(mode = "list", n_iter)
 for (i in seq_len(n_iter)) {
   sample_noise <- population_noise |>
     sample_flight_wr_ent()
 
-  y_hats[[i]] <- sample_noise |>
+  y_hats_wr_ent[[i]] <- sample_noise |>
     mutate(
       across(all_of(var_y_names), \(y) y * s_i / pi_i)
     ) |>
@@ -160,11 +200,11 @@ for (i in seq_len(n_iter)) {
   setTxtProgressBar(pb, i)
 }
 close(pb)
-readr::write_csv(bind_rows(y_hats), "output/y_hats_ent.csv")
+readr::write_csv(bind_rows(y_hats_wr_ent), "output/y_hats_ent.csv")
 tictoc::toc()
 
 purrr::map(
-  paste0("output/", c("y_hats_exh", "y_hats_ent", "y_hats_copy"), ".csv"),
+  paste0("output/", c("y_hats_base_flight", "y_hats_base", "y_hats_exh", "y_hats_ent", "y_hats_copy"), ".csv"),
   \(path) {
     readr::read_csv(path) |>
       tidyr::pivot_longer(everything()) |>
@@ -173,9 +213,23 @@ purrr::map(
 ) |>
   purrr::list_rbind() |>
   summarize(
-    mean(value),
-    var(value),
+    mean_y = mean(value),
+    var_y = var(value),
     .by = c(name, method)
   ) |> readr::write_csv("output/results.csv")
 
-readr::read_csv("output/results.csv")
+table_result <- readr::read_csv("output/results.csv") |>
+  select(name, method, var_y) |>
+  mutate(method = stringr::str_extract(method, "output/y_hats_(.*).csv", group = 1)) |>
+  tidyr::pivot_wider(names_from = "method", values_from = var_y)
+
+cbind(
+  bind_rows(res_list) |> select(noise, r_squared, srswor, v_multi, v_deville),
+  table_result |> select(-name)
+) |>
+  select(noise, r_squared, srswor, base, base_flight, exh, ent, copy, v_multi, v_deville) |>
+  write_table_noise_tex(
+    length(fixed_sample_fn_list),
+    length(v_approx_fn_list),
+    "output/table/noise_complete.tex"
+  )
